@@ -100,7 +100,7 @@ Lint for meaning: contradictions, and claims superseded by newer ones. `km` read
 
 ### Context-confound check: the bare runner
 Subagents inherit CLAUDE.md and MEMORY.md, so rule probes run only through `scripts/bare_probe.py`: `claude -p` with an empty config dir, a cwd outside the home folder, no tools, no MCP, auto-memory off, auth via a setup-token in the OS credential store. Windows only in v0.1.
-- `bare_probe.py --canary --model <id> --leak-marker "<owner name>"`: exit 0 `clean` = gate passes; 2 = leak; 3 = no token; 1 = claude failed. Record in `runs.md`.
+- `bare_probe.py --canary --model <id> --leak-marker "<owner name>"`: exit 0 `clean` = gate passes; 2 = leak; 3 = no token; 4 = a CLAUDE.md sits above the working folder (default `<system drive>\km-bare-probe`; override with `--root` or `KM_BARE_ROOT`); 1 = claude failed. Record in `runs.md`.
 - Always pass `--model`; the runner's default may not be the model under test. A model newer than the CLI fails until `claude update`.
 - Arm A: the rule text prepended as "Working rule: …". Arm B: the scenario alone. Same scenario, same model.
 - `--json` reports `cost_usd`, the API-equivalent figure; on a subscription token it draws on the plan allowance rather than billing.

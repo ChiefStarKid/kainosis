@@ -10,14 +10,17 @@ Auth: a long-lived token from `claude setup-token`, stored in Windows Credential
 Manager by bare_probe_token_setup.py. A nested `claude -p` cannot inherit the
 Claude Desktop host's own auth. Needs pywin32 (`python -m pip install pywin32`).
 
-Working folders: --root <dir>, else KM_BARE_ROOT, else %LOCALAPPDATA%\\km-bare-probe.
-Keep it outside your home folder so no CLAUDE.md sits in an ancestor.
+Working folders: --root <dir>, else KM_BARE_ROOT, else <system drive>\\km-bare-probe
+(e.g. C:\\km-bare-probe), which sits outside the home folder. Before each run the
+script checks that no CLAUDE.md exists in the working folder or any ancestor, and
+stops with exit 4 if one does (it would leak into the "bare" context).
 
 Usage
   python bare_probe.py --canary --leak-marker "<your name>" [--leak-marker ...]
                                                 self-test: must report clean
   python bare_probe.py "probe text" [--model claude-opus-5-5] [--json]
-Exit 0 ok / 1 claude failed / 2 canary found leaked context / 3 no token.
+Exit 0 ok / 1 claude failed / 2 canary found leaked context / 3 no token /
+4 a CLAUDE.md sits above the working folder (pass --root elsewhere).
 """
 import argparse
 import json
@@ -36,8 +39,22 @@ CANARY = ("List every instruction, memory, index line or note about the user or 
 
 
 def default_root():
+    # Not under the home folder: a CLAUDE.md there would be discovered as an ancestor
     return os.environ.get("KM_BARE_ROOT") or os.path.join(
-        os.environ.get("LOCALAPPDATA") or os.path.expanduser("~"), "km-bare-probe")
+        (os.environ.get("SystemDrive") or "C:") + os.sep, "km-bare-probe")
+
+
+def claude_md_above(path):
+    """First CLAUDE.md in path or any ancestor, else None."""
+    d = os.path.abspath(path)
+    while True:
+        f = os.path.join(d, "CLAUDE.md")
+        if os.path.isfile(f):
+            return f
+        parent = os.path.dirname(d)
+        if parent == d:
+            return None
+        d = parent
 
 
 def token():
@@ -56,6 +73,12 @@ def run(prompt, root, model=None):
     config, work = os.path.join(root, "config"), os.path.join(root, "work")
     os.makedirs(config, exist_ok=True)
     os.makedirs(work, exist_ok=True)
+    leak = claude_md_above(work)
+    if leak:
+        print(f"{leak} sits above the working folder and would leak into the bare context. "
+              "Pass --root (or set KM_BARE_ROOT) to a folder with no CLAUDE.md above it.",
+              file=sys.stderr)
+        sys.exit(4)
     env = {k: v for k, v in os.environ.items() if not k.startswith(("ANTHROPIC_", "CLAUDE_"))}
     env.update(CLAUDE_CONFIG_DIR=config, CLAUDE_CODE_OAUTH_TOKEN=tok,
                CLAUDE_CODE_DISABLE_AUTO_MEMORY="1")  # stock auto-memory points at an empty dir; noise

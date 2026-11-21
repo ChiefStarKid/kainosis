@@ -71,7 +71,7 @@ Report **coverage**: share of rules with a deterministic check vs `unknown` (jud
 
 Load `REF` §Probe. Gate first:
 
-- **Context-confound check:** rule probes run ONLY through the bare runner `python "${CLAUDE_PLUGIN_ROOT}/scripts/bare_probe.py"`, never subagents (they inherit CLAUDE.md and MEMORY.md). Run `bare_probe.py --canary --model <id> --leak-marker "${user_config.owner_name}"` (plus any other name only this context holds) once per model under test; `clean` (exit 0) = gate passes; record in `runs.md`. Exit 2 (leak), 3 (no token) or no runner on this OS → skip rule probes; verdicts rest on `cases.jsonl` + transcript evidence, and the plan says so.
+- **Context-confound check:** rule probes run ONLY through the bare runner `python "${CLAUDE_PLUGIN_ROOT}/scripts/bare_probe.py"`, never subagents (they inherit CLAUDE.md and MEMORY.md). Run `bare_probe.py --canary --model <id> --leak-marker "${user_config.owner_name}"` (plus any other name only this context holds) once per model under test; `clean` (exit 0) = gate passes; record in `runs.md`. Exit 2 (leak), 3 (no token), 4 (a CLAUDE.md above the working folder; tell the user to set `KM_BARE_ROOT`) or no runner on this OS → skip rule probes; verdicts rest on `cases.jsonl` + transcript evidence, and the plan says so.
 
 If the gate passes, replay ~5 cases per flagged item (with-rule vs without-rule arms, k=3, `--model` always explicit). Write each scenario per §Probe **Scenario rule**: rebuilt from the case's `situation`, never hinting at the rule. Probe only `failing`, `revalidate` and `retire-candidate`.
 
