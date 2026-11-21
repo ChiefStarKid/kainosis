@@ -1,0 +1,30 @@
+{
+  "name": "solomon",
+  "version": "0.1.0",
+  "description": "Hub-and-spoke memory graph for Claude Code with two skills: km (session close-out that records corrections as eval cases) and km-audit (re-tests rules on the current model and retires the ones it no longer needs, within a context budget).",
+  "author": {
+    "name": "Joseph Solomon"
+  },
+  "license": "MIT",
+  "keywords": ["memory", "knowledge-management", "llm-wiki", "evals", "context-budget"],
+  "userConfig": {
+    "memory_path": {
+      "type": "directory",
+      "title": "Memory directory",
+      "description": "Folder holding MEMORY.md and the memory files, e.g. <config dir>/projects/<project>/memory",
+      "required": true
+    },
+    "owner_name": {
+      "type": "string",
+      "title": "Your name",
+      "description": "How the skills refer to you in rules and questions",
+      "required": true
+    },
+    "scope_rule_file": {
+      "type": "file",
+      "title": "Scope rule file",
+      "description": "Optional markdown file saying which memory is in scope for this profile and what to skip (see docs/scope-rule.md)",
+      "required": false
+    }
+  }
+}

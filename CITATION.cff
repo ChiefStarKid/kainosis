@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this framework, please cite it as below."
+title: "solomon: a context-budgeted memory graph with eval-driven rule retirement for Claude Code"
+type: software
+version: 0.1.0
+date-released: 2026-11-21
+license: MIT
+authors:
+  - family-names: Solomon
+    given-names: Joseph
+keywords:
+  - karpathy-llm-wiki
+  - llm-wiki
+  - claude-code
+  - agent-memory
+references:
+  - type: software
+    title: "LLM Wiki"
+    authors:
+      - family-names: Karpathy
+        given-names: Andrej
+    url: "https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f"
+    date-released: 2026-04-04
+    notes: "Upstream pattern; this project is a fork."
+  - type: software
+    title: "NanoClaw"
+    authors:
+      - family-names: Balakrishnan
+        given-names: Vivian
+    url: "https://gist.github.com/VivianBalakrishnan/a7d4eec3833baee4971a0ee54b08f322"
+    date-released: 2026-04-24
+    notes: "Related fork of LLM Wiki taking the opposite design direction (owned infrastructure); not a source of this project."

@@ -1,0 +1,14 @@
+{
+  "name": "solomon",
+  "description": "Single-plugin marketplace for the solomon memory framework.",
+  "owner": {
+    "name": "Joseph Solomon"
+  },
+  "plugins": [
+    {
+      "name": "solomon",
+      "source": "./",
+      "description": "Hub-and-spoke memory graph with km (close-out, eval cases) and km-audit (re-test and retire rules within a context budget)."
+    }
+  ]
+}
