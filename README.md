@@ -128,7 +128,7 @@ From my own profile's memory, 2026-11-20 to 2026-11-21. One person, one profile:
 Out of v0.1, planned for later updates:
 - Prove the rules-separation method on a second cluster.
 - Full evolution history (v0.1 ships a short dated list).
-- Session grooming as an optional extra (Desktop-only).
+- Session grooming as an optional extra (Desktop-only): archive sessions with a searchable catalogue, keep a list of sessions cited as eval evidence, and propose deletes of noise threads for approval. The keep-list and the delete step ship together.
 - `bare_probe.py` beyond Windows (macOS Keychain, Linux secret store).
 - The rules-reminder hook as an example `hooks/` folder.
 - Four more checker scripts, a `Trigger:` backfill for older rules, a Why-exemption for hubs, and calibration of the compaction path-bytes cap.
