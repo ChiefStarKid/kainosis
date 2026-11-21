@@ -6,9 +6,9 @@ Topics: `llm-wiki` · `karpathy-llm-wiki` · `claude-code` · `claude-code-plugi
 
 A fork of [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) that turns it on the agent itself: corrections become tested rules, and rules the model outgrows are retired, within a fixed context budget.
 
-Packaged as a Claude Code plugin with two skills:
-- **`/solomon:km`** closes a session: it captures what is worth keeping, records each correction as an eval case, checks graph health, and writes after a short Q&A. `/solomon:km lean` is the cheap version to run before `/compact`.
-- **`/solomon:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes.
+The Solomon Framework is the method; it ships as the **Kainosis** Claude Code plugin, with two skills:
+- **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case, checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
+- **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes.
 
 Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history. Status: v0.1, tested by one person on one profile. See [Results so far](#results-so-far).
 
@@ -76,7 +76,7 @@ From GitHub (once published):
 
 ```bash
 claude plugin marketplace add <owner>/<repo>
-claude plugin install solomon@solomon --config memory_path="<your memory dir>" --config owner_name="<your name>"
+claude plugin install kainosis@kainosis --config memory_path="<your memory dir>" --config owner_name="<your name>"
 ```
 
 Or install from inside Claude Code with `/plugin`, which prompts for the options. Change them later with `/plugin` → configure.
@@ -144,7 +144,7 @@ docs/             schema.md · evals.md · scope-rule.md · evolution.md
 examples/graph/   fictional memory graph
 ```
 
-The plugin id (`solomon`, working name) sets the command prefix. To rename it, change `name` in `.claude-plugin/plugin.json`, the marketplace `name` and plugin entry `name` in `.claude-plugin/marketplace.json`, and the `/solomon:` commands and `solomon@solomon` install line in this README. The skills never name it.
+The plugin id (`kainosis`) sets the command prefix. To rename it, change `name` in `.claude-plugin/plugin.json`, the marketplace `name` and plugin entry `name` in `.claude-plugin/marketplace.json`, and the `/kainosis:` commands and `kainosis@kainosis` install line in this README. The skills never name it.
 
 ## Licence
 
