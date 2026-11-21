@@ -1,6 +1,6 @@
 {
   "name": "solomon",
-  "description": "Single-plugin marketplace for the solomon memory framework.",
+  "description": "Marketplace for the Solomon Framework plugin.",
   "owner": {
     "name": "Joseph Solomon"
   },
@@ -8,7 +8,7 @@
     {
       "name": "solomon",
       "source": "./",
-      "description": "Hub-and-spoke memory graph with km (close-out, eval cases) and km-audit (re-test and retire rules within a context budget)."
+      "description": "Solomon Framework: a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired."
     }
   ]
 }

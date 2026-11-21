@@ -1,6 +1,6 @@
 ---
 name: km-audit
-description: On-demand audit of the KM layer. Evaluates whether each memory, rule, skill, command and integration still works and is still needed on the current model, and proposes fixes and retirements. Context efficiency is the overriding constraint. Applies structural fixes itself; any rule change waits for an approved plan.
+description: On-demand audit of the memory graph: re-tests rules on the current model, retires unneeded ones, compacts the index within a context budget.
 ---
 
 # km-audit

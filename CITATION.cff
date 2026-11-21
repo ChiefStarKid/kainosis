@@ -1,18 +1,35 @@
 cff-version: 1.2.0
 message: "If you use this framework, please cite it as below."
-title: "solomon: a context-budgeted memory graph with eval-driven rule retirement for Claude Code"
+title: "Solomon Framework: a Karpathy LLM Wiki fork for agents on a context budget"
 type: software
 version: 0.1.0
 date-released: 2026-11-21
 license: MIT
+abstract: "Solomon Framework: a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired."
 authors:
   - family-names: Solomon
     given-names: Joseph
 keywords:
-  - karpathy-llm-wiki
   - llm-wiki
+  - karpathy-llm-wiki
   - claude-code
+  - claude-code-plugin
+  - claude-skills
   - agent-memory
+  - llm-memory
+  - knowledge-graph
+  - knowledge-management
+  - personal-knowledge-management
+  - context-engineering
+  - context-window
+  - llm-evaluation
+  - evals
+  - ai-agents
+  - coding-agents
+  - memory-pruning
+  - second-brain
+  - markdown
+  - hub-and-spoke
 references:
   - type: software
     title: "LLM Wiki"

@@ -1,6 +1,6 @@
 ---
 name: km
-description: Knowledge Management close-out. Full run reviews the conversation, records corrections as eval cases, audits the memories it touches plus graph health, and writes creates/updates/deletes after a confirmation Q&A. `lean` (alias `pre-compact`) is the cheap offload run before /compact.
+description: Session close-out for the memory graph: captures rules and facts, records corrections as eval cases, checks graph health. `lean` = cheap offload before /compact.
 argument-hint: "[lean]"
 ---
 

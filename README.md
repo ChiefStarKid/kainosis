@@ -1,4 +1,8 @@
-# solomon
+# Solomon Framework
+
+**A Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired.**
+
+Topics: `llm-wiki` · `karpathy-llm-wiki` · `claude-code` · `claude-code-plugin` · `claude-skills` · `agent-memory` · `llm-memory` · `knowledge-graph` · `knowledge-management` · `personal-knowledge-management` · `context-engineering` · `context-window` · `llm-evaluation` · `evals` · `ai-agents` · `coding-agents` · `memory-pruning` · `second-brain` · `markdown` · `hub-and-spoke`
 
 A fork of [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) that turns it on the agent itself: corrections become tested rules, and rules the model outgrows are retired, within a fixed context budget.
 
@@ -140,7 +144,7 @@ docs/             schema.md · evals.md · scope-rule.md · evolution.md
 examples/graph/   fictional memory graph
 ```
 
-The plugin name (`solomon`) sets the command prefix. It appears in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` and this README; the skills never name it.
+The plugin id (`solomon`, working name) sets the command prefix. To rename it, change `name` in `.claude-plugin/plugin.json`, the marketplace `name` and plugin entry `name` in `.claude-plugin/marketplace.json`, and the `/solomon:` commands and `solomon@solomon` install line in this README. The skills never name it.
 
 ## Licence
 
