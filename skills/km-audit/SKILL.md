@@ -41,7 +41,7 @@ Run the triage script described in `REF` §Triage with `python -X utf8 -I`, from
 - **Rule signals:** violations and corrections per rule slug, attributed to the model of the assistant message they concern (not the session).
 - **Friction:** permission prompts and denials, retries, re-explanations, tool errors and workarounds.
 - **Usage:** slash-command and skill invocations, memory files read, memory files never read.
-- **Load receipt:** per session, `python -X utf8 -I "${CLAUDE_PLUGIN_ROOT}/scripts/km_load_receipt.py" --mem "${user_config.memory_path}" <sessions>` (`REF` §Load receipt). Only `whole` sessions count as evidence for violations, relevance and retirement; list `truncated`/`absent` ones in the report.
+- **Load receipt:** per session, `python -X utf8 -I "${CLAUDE_PLUGIN_ROOT}/scripts/km_load_receipt.py" --mem "${user_config.memory_path}" <sessions>` (`REF` §Load receipt). If the memory folder is a git repo, add `--history <repo> --index-path <MEMORY.md relative to repo>`. Only `whole` sessions count as evidence for violations, relevance and retirement; list `truncated`/`absent` ones, and `unknown` ones (index changed since start, no history) separately, never as truncated.
 - **Case candidates:** corrections not yet in `cases.jsonl` (dedup: rule + session). Candidates only; they never flag on their own (§Triage).
 
 **Graph metrics:** run `GRAPH --json --reachable-excluding-self <every indexed slug>`. Read-only, owned by km; slugs = keys of `bytes_by_slug`. Use its fields as-is: `islands`, `unreachable`, `dead_links`, `feedback_missing`, `bytes_by_slug`, `reachable_excluding_self`, `route`, `route_excluding_self` (hops, path_bytes, via).
