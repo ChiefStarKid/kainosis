@@ -162,6 +162,7 @@ Context-confound check: <passed / failed → probes skipped>
 
 ## Key rules
 
+- **Owner words only.** Tool-result wording needs OWNER's approval, shown with its source (`schema.md` A7).
 - **Escalate spend only on surprise.**
 - **Retiring obsolete scaffolding is a primary output.** Dormant, not delete.
 - **No duplicates after graduation.** A rule enforced by a hook or script loses its text.
