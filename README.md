@@ -1,12 +1,12 @@
-# Solomon Framework
+# Kainosis
 
-**A Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired.**
+**A Claude Code plugin implementing the Solomon Framework: a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired.**
 
 Topics: `llm-wiki` · `karpathy-llm-wiki` · `claude-code` · `claude-code-plugin` · `claude-skills` · `agent-memory` · `llm-memory` · `knowledge-graph` · `knowledge-management` · `personal-knowledge-management` · `context-engineering` · `context-window` · `llm-evaluation` · `evals` · `ai-agents` · `coding-agents` · `memory-pruning` · `second-brain` · `markdown` · `hub-and-spoke`
 
 A fork of [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) that turns it on the agent itself: corrections become tested rules, and rules the model outgrows are retired, within a fixed context budget.
 
-The Solomon Framework is the method; it ships as the **Kainosis** Claude Code plugin, with two skills:
+The **Solomon Framework** is the method: the thinking behind the capture, re-test and retire loop, set out in [What is different](#what-is-different) and [docs/](docs/). Kainosis is its Claude Code implementation, with two skills:
 - **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case, checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
 - **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes.
 

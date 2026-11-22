@@ -1,6 +1,6 @@
 {
   "name": "kainosis",
-  "description": "Marketplace for Kainosis plugins. First plugin: kainosis, the Solomon Framework for Claude Code.",
+  "description": "Marketplace for Kainosis plugins. First plugin: kainosis, which implements the Solomon Framework for Claude Code.",
   "owner": {
     "name": "Joseph Solomon"
   },
@@ -8,7 +8,7 @@
     {
       "name": "kainosis",
       "source": "./",
-      "description": "Solomon Framework: a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired."
+      "description": "Implements the Solomon Framework, a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired."
     }
   ]
 }

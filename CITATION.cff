@@ -1,11 +1,11 @@
 cff-version: 1.2.0
 message: "If you use this framework, please cite it as below."
-title: "Solomon Framework: a Karpathy LLM Wiki fork for agents on a context budget"
+title: "Kainosis: a Claude Code plugin implementing the Solomon Framework"
 type: software
 version: 0.1.0
 date-released: 2026-11-21
 license: MIT
-abstract: "Solomon Framework: a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired."
+abstract: "Kainosis: a Claude Code plugin implementing the Solomon Framework, a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired."
 authors:
   - family-names: Solomon
     given-names: Joseph
