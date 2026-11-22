@@ -86,7 +86,7 @@ Applied to confirmed candidates and to the files read in Step 3.
   - `user`: only if directly contradicted
 
   Propose UPDATE or DELETE. The repo-wide stale sweep belongs to km-audit.
-- **B — Reinforcement.** If an existing file covers the candidate, UPDATE it; never CREATE an overlapping file. UPDATE only when the firing adds real nuance to Why or How to apply. Never append "confirmed again" or tally lines: a clean follow writes nothing, a violation becomes a case. Any UPDATE to a feedback file that lacks `basis` adds it.
+- **B — Reinforcement.** If an existing file covers the candidate, UPDATE it; never CREATE an overlapping file. If a node must be replaced rather than edited, CREATE the new one with `supersedes: <old_slug>` in frontmatter (`SCHEMA` A1); leave the old file for OWNER to retire. UPDATE only when the firing adds real nuance to Why or How to apply. Never append "confirmed again" or tally lines: a clean follow writes nothing, a violation becomes a case. Any UPDATE to a feedback file that lacks `basis` adds it.
 - **C — MEMORY.md budget.** Line count from `GRAPH`. Full run: at ≥170 lines, propose merges or trims from the index lines already in context. Lean run: report the count only. A new MEMORY.md line adds to always-loaded context: prefer linking the new file from its hub instead, and add an index line only with OWNER's yes.
 - **D — Completeness.** New and touched `feedback`/`project` files need `**Why:**` and `**How to apply:**`. New feedback files, and feedback files this run updates, need `metadata.basis`. Don't flag untouched files.
 - **E — Readability.** New and touched files meet `SCHEMA` A3/A4:

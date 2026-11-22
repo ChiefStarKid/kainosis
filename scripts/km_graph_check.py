@@ -8,6 +8,7 @@ Never writes.
 Memory dir: --mem <dir>, else the CLAUDE_PLUGIN_OPTION_MEMORY_PATH or
 KM_MEMORY_PATH environment variable.
 
+A `supersedes:` target with no file is reported as a dead link.
 Scans top-level *.md only. Excluded from every check: MEMORY.md, log.md and
 all subdirectories (eval/, dormant/, ...). [[ ]] inside code spans are
 placeholders, not links.
@@ -56,7 +57,7 @@ def frontmatter(text):
     end = text.find("\n---", 3)
     fm = {}
     for line in text[3:end].splitlines():
-        m = re.match(r"\s*(name|type|basis):\s*(.*)", line)
+        m = re.match(r"\s*(name|type|basis|supersedes):\s*(.*)", line)
         if m and m.group(1) not in fm:
             fm[m.group(1)] = m.group(2).strip().strip("\"'")
     return fm
@@ -112,6 +113,10 @@ def analyse(mem, reach, reach_ex):
     meta = {s: frontmatter(t) for s, t in texts.items()}
     edges, inbound, dead, total_wiki = {}, {s: 0 for s in files}, [], 0
     for s, text in texts.items():
+        # supersedes: slug or [slug, slug]; a missing target is a dead link, not an edge.
+        for t in re.split(r"[,\s\[\]]+", meta[s].get("supersedes", "")):
+            if t and t.removesuffix(".md") not in files:
+                dead.append(f"{s}->{t} (supersedes)")
         wiki = {t.strip() for t in WIKILINK.findall(CODE.sub("", text))} - {""}
         md = {Path(t).stem for t in MDLINK.findall(text)}
         total_wiki += len(wiki & files.keys())

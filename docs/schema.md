@@ -25,6 +25,7 @@ metadata:
 - **`basis` test:** would a fully capable model with no knowledge of the owner or this machine still get this wrong? Yes → `fact` or `preference` (knowledge the model can't have; permanent). No → `compensation` (guards against a model weakness; should shrink as models improve). Only `compensation` is ever re-tested or retired on model grounds. Mixed memories are split in two.
 - `name` = the filename slug, so name, file and `[[ ]]` link are one token.
 - `type` lives only at `metadata.type`.
+- `supersedes:` (optional, top level): the slug of the file this one replaces, or a list `[a, b]`. Written by `km` when a close-out revises an existing node; no back-fill of older nodes. The old file stays until the owner retires it. A target with no file counts as a dead link. `km-audit` skips contradiction pairs it resolves but still lists them.
 
 ## A2 — Where a new fact goes
 
@@ -63,7 +64,7 @@ Read-only, stdlib only. Scans top-level `*.md`; skips MEMORY.md, log.md and ever
 - **Interlink density:** `[[ ]]` links ÷ files. Flag < 1.0 (graph thinning into a list).
 - **Islands:** files with zero inbound `[[ ]]`. Fix: link from the hub or closest file.
 - **Unreachable:** not reachable from MEMORY.md through index links, then `[[ ]]` and `.md` links. The orphan test under hub-and-spoke: a file needn't be in MEMORY.md but must be reachable.
-- **Dead links:** `[[name]]` with no `name.md`.
+- **Dead links:** `[[name]]` with no `name.md`, or a `supersedes:` target with no file.
 - **Feedback completeness:** counts of feedback files missing `**Why:**`, `**Trigger:**`, `basis`.
 - `--reachable <slug…>` per-slug check; `--reachable-excluding-self` asks whether a slug survives losing its own index line (compaction).
 - `--json` adds `route` per file: `hops_from_index`, `path_bytes` (bytes opened before arriving on the cheapest route) and `via`.
