@@ -4,6 +4,12 @@ Versions follow `plugin.json`. Installed copies update only when the version is 
 
 Any change to what the plugin reads, writes or sends is listed under **Data handling** in its release, and [PRIVACY.md](PRIVACY.md) is updated in the same release.
 
+## Unreleased
+
+- Added: `hooks/`, an **example** rules-reminder hook (`rules_reminder.py`, Python standard library only) with a sample config and an enable guide ([#5](https://github.com/ChiefStarKid/kainosis/issues/5)). It is on `main` but not yet in a tagged release; installed copies get it when the version is bumped.
+
+**Data handling:** the plugin still registers no hook: there is no `hooks.json`, and `plugin.json` does not reference the folder, so nothing runs unless you copy the settings snippet into your own `settings.json`. If you do, the hook reads only the hook input Claude Code sends it and its own config file, writes only a reminder to stdout, and uses no network. [PRIVACY.md](PRIVACY.md) and the README "What it reads, writes and sends" section are updated to match.
+
 ## 0.1.1
 
 Fix release.
