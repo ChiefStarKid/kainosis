@@ -97,6 +97,20 @@ Options (stored per profile, so two profiles can point at two memory dirs):
 
 The version is pinned in `plugin.json`, so a new commit reaches installed copies only when the version is bumped.
 
+### What it reads, writes and sends
+
+Everything stays on your machine except the two items marked **network**.
+
+| Component | Reads | Writes | Network |
+|---|---|---|---|
+| `km` | The current conversation; files in `memory_path`; your `scope_rule_file` | Memory files, `MEMORY.md`, `log.md` and `eval/*.jsonl` inside `memory_path` | If `memory_path` is in a git repo it commits there. It runs `git push` to **your own remote** only if your scope file says to, to the branch it names; never a force-push |
+| `km-audit` | Files in `memory_path`; your past Claude Code session transcripts in your config dir (`<config dir>/projects/*/*.jsonl`, at most the 60 newest since the last run) | Memory files and `eval/` state inside `memory_path`, and a plan file in the session scratchpad | Commits like `km`; never pushes unless you say so in the session. Rule probes go through `bare_probe.py` (below) |
+| `scripts/km_graph_check.py` | Files in `memory_path` | Nothing | None |
+| `scripts/bare_probe.py` (optional, Windows) | A token you stored in Windows Credential Manager (`ClaudeBareProbe-OAuth`) | An empty config folder and a work folder under `--root` / `KM_BARE_ROOT` (default `<system drive>\km-bare-probe`) | **network:** runs `claude -p` to send short test prompts to Anthropic, as you, with that token. A prompt is a scenario rebuilt from one of your recorded cases and, in one of the two arms, the text of the rule under test |
+| `scripts/bare_probe_token_setup.py` (optional, once) | Your clipboard (the token you copied from `claude setup-token`) | The token into Windows Credential Manager; then it clears the clipboard. It prints only the token's length | None |
+
+No telemetry, no other services, no hooks, no MCP servers. The plugin itself stores your name, memory files and eval state only on your machine. As in any Claude Code session, whatever the skills read into the conversation (memory files, transcript excerpts) goes to the model you are using; beyond that, data leaves your machine only as probe prompts sent by `bare_probe.py` and whatever you choose to push to your own git remote.
+
 ### Python prerequisites
 
 - Python 3 on `PATH` as `python`.
