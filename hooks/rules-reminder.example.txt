@@ -1,0 +1,6 @@
+# EXAMPLE reminder rules (hobby-greenhouse theme). Copy to rules-reminder.txt and edit.
+# Format:  regex => reminder     (regex is matched against the tool input; case-insensitive)
+#          reminder              (no regex: shown on every call)
+spreadsheet|sheets|append|readings\.csv => Read the header row and last 5 rows of the target tab before writing; write to `raw`, never a formula tab.
+temp|celsius|sensor_log => Sensor temps are integers in tenths of a degree C (215 = 21.5 C); divide by 10 and state the unit.
+seed_order|supplier => Check the seed order list for duplicates before placing or editing an order.
