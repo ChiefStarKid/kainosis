@@ -90,10 +90,13 @@ If the index is cut short at load time, rules stop applying and the audit could 
 
 **Whole** = the index's final non-empty line AND every `.md` link target in the index appear in that text. The hub count is the number of distinct link targets in `MEMORY.md`. Receipt values:
 - `whole`: both markers present.
-- `truncated`: some index text present, final line or a target missing.
+- `truncated`: index text present, final line or a target missing, and the index has not changed since the session started (or the index at session start, read from git history, confirms the cut).
 - `absent`: no index text found (not loaded, or not captured in the transcript).
+- `unknown`: the receipt is not whole, `MEMORY.md` was modified after the session started (`stale_index`), and no index-at-start is available (no `--history`, or no commit that old). The mismatch may be an edit, not a cut, so it is never called `truncated`.
 
-Only `whole` sessions count as evidence for violations, relevant-session counts and retire-candidates. `truncated` and `absent` sessions are listed in the report with their hub count (`3/4`). Script: `scripts/km_load_receipt.py` (test: `scripts/test_km_load_receipt.py`). Deliberately simple: if the index format changes (no `](x.md)` links), the receipt reads `absent` rather than guessing. The receipt also records the session's start and `MEMORY.md`'s modified time; a non-whole receipt whose index was edited after the session began is flagged `stale_index` (the mismatch may be an edit, not a cut). It is still excluded, and the report notes it. It does not repair a load.
+**Index at session start (optional):** `--history <git repo> --index-path <MEMORY.md path relative to that repo>`. For a stale non-whole receipt the script runs read-only `git log --before=<session start> -1 -- <path>` and `git show <commit>:<path>` in that repo, and re-judges against that older index. Nothing is written or fetched.
+
+**Evidence rule:** only `whole` sessions count as evidence for violations, relevant-session counts and retire-candidates. `truncated` is a real cut and is listed. `unknown` sessions are listed separately with their hub count, are never reported as truncated, and likewise do not count as evidence either way (a violation seen in one is not counted against a rule, and its silence does not support retiring one). Script: `scripts/km_load_receipt.py` (test: `scripts/test_km_load_receipt.py`). Deliberately simple: if the index format changes (no `](x.md)` links), the receipt reads `absent` rather than guessing. It does not repair a load.
 
 ## §Contradictions (whole graph, tiered)
 
