@@ -145,21 +145,11 @@ From my own profile's memory, 2026-11-20 to 2026-11-21. One person, one profile:
 
 ## Roadmap
 
-Out of v0.1, planned for later updates:
-- Prove the rules-separation method on a second cluster.
-- Full evolution history (v0.1 ships a short dated list).
-- Session grooming as an optional extra (Desktop-only): archive sessions with a searchable catalogue, keep a list of sessions cited as eval evidence, and propose deletes of noise threads for approval. The keep-list and the delete step ship together.
-- `bare_probe.py` beyond Windows (macOS Keychain, Linux secret store).
-- The rules-reminder hook as an example `hooks/` folder.
-- An opt-in example `PreCompact` hook for `km lean`: `km lean` writes its Keep list to a file and the hook returns it as compaction instructions, so a bare `/compact` carries it. Being tested locally first; not shipped enabled, because a plugin hook would change the "no hooks" disclosure. Claude Code cannot start a compaction from a skill or hook today, so `km lean` still ends with the paste-ready `/compact Keep:` line (tracked upstream: anthropics/claude-code#19877).
-- Four more checker scripts, a `Trigger:` backfill for older rules, a Why-exemption for hubs, and calibration of the compaction path-bytes cap.
+The roadmap lives in [GitHub issues labelled `roadmap`](https://github.com/ChiefStarKid/kainosis/issues?q=is%3Aissue+is%3Aopen+label%3Aroadmap); [milestone v0.2](https://github.com/ChiefStarKid/kainosis/milestone/1) is the next release. Headlines:
+- **Next (v0.2):** capture rules from the owner's words only ([#10](https://github.com/ChiefStarKid/kainosis/issues/10)), a load receipt for the always-loaded context ([#8](https://github.com/ChiefStarKid/kainosis/issues/8)), a `supersedes:` field at close-out ([#12](https://github.com/ChiefStarKid/kainosis/issues/12)), and the rules-reminder hook as an example `hooks/` folder ([#5](https://github.com/ChiefStarKid/kainosis/issues/5)).
+- **Later:** a second-cluster proof of the method, `bare_probe.py` beyond Windows, published error rates for each check, harder hooks, opt-in session grooming, and an opt-in `PreCompact` hook for `km lean` (being tested locally; [#6](https://github.com/ChiefStarKid/kainosis/issues/6)).
 
-From comparing notes with [Link](https://github.com/gowtham0992/link), another implementation of the LLM Wiki pattern:
-- **Load receipt.** A per-session check that the always-loaded context arrived whole and was not cut short, added to `km-audit` triage.
-- **Published error rates.** Report how often each check is wrong: retire-candidates later found still needed, probe verdicts that transcripts contradict, and triage correction hits that were false. Make the probe-versus-transcript disagreement a standing metric in `runs.md`.
-- **Capture from the owner's words only.** Cases and correction candidates come only from the owner's own turns; text from tool results never enters a rule without the owner seeing its source. Memory loads into every session, so it is a prompt-injection target.
-- **Harder hooks and checks.** Match `check` patterns and graduated hooks against commands as the shell runs them (inside `&&` chains, `bash -c`, `sudo`), not raw tool input, and stop the agent from editing its own hook files.
-- **Supersession at write time.** A `supersedes:` field written at close-out, so a revised fact names what it replaces and the audit's contradiction pass has fewer pairs to judge.
+Items marked `data-handling` change what the plugin reads, writes or sends; they ship with a CHANGELOG "Data handling" note and a PRIVACY.md update. Several items came from comparing notes with [Link](https://github.com/gowtham0992/link), another implementation of the LLM Wiki pattern.
 
 ## Layout
 
