@@ -6,11 +6,11 @@ Kainosis is a local Claude Code plugin. It has no servers, accounts, telemetry, 
 
 - The current Claude Code conversation (`km`, at close-out).
 - Files in the memory folder you set as `memory_path`, and your optional `scope_rule_file`.
-- `km-audit` only: your past Claude Code session transcripts in your config dir (`<config dir>/projects/*/*.jsonl`), at most the 60 newest since the last audit. They are scanned by a local script; only short excerpts relevant to a flagged rule enter the conversation.
+- `km-audit` only: your past Claude Code session transcripts in your config dir (`<config dir>/projects/*/*.jsonl`), at most the 60 newest since the last audit. They are scanned by a local script; only short excerpts relevant to a flagged rule enter the conversation. The load receipt reads the loaded-instructions entries of those transcripts to check whether `MEMORY.md` arrived whole; with the optional `--history` flag it also runs read-only `git log` and `git show` in your memory repo to compare against the earlier index. Session ids and a status appear in the local audit report.
 
 ## What it writes
 
-Only inside `memory_path`: memory files, `MEMORY.md`, `log.md` and `eval/` state. `km-audit` also writes its plan file to the session scratchpad. `bare_probe.py` creates an empty config folder and a work folder under `--root` / `KM_BARE_ROOT` (default `<system drive>\km-bare-probe`).
+Only inside `memory_path`, and only what you say in your own turns or explicitly approve: content that arrives through tools (web pages, files, command output) is not saved as a rule unless Kainosis first shows you its source and exact text and you approve it. Text you paste into your own turn is shown with its origin before saving. What it writes: memory files, `MEMORY.md`, `log.md` and `eval/` state. `km-audit` also writes its plan file to the session scratchpad. `bare_probe.py` creates an empty config folder and a work folder under `--root` / `KM_BARE_ROOT` (default `<system drive>\km-bare-probe`).
 
 Your name (`owner_name`) and paths are stored by Claude Code in your own settings file, per profile.
 
