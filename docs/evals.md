@@ -84,6 +84,17 @@ Throwaway Python in the scratchpad, run with `python -X utf8 -I`. Stream the `.j
 
 **Drop-set recheck:** single-slug checks can miss a chain that two drops break together. Copy the top-level `*.md` to a scratch folder, write the candidate MEMORY.md there, run `km_graph_check.py --mem <folder> --json`; `unreachable` must not grow.
 
+## §Load receipt (triage, no LLM)
+
+If the index is cut short at load time, rules stop applying and the audit could read that as the model not needing them. Triage records a receipt per session it scans, using only text it already reads: the opening entries of the session's transcript (first 6 lines of the `.jsonl`) and `MEMORY.md`.
+
+**Whole** = the index's final non-empty line AND every `.md` link target in the index appear in that opening text. The hub count is the number of distinct link targets in `MEMORY.md`. Receipt values:
+- `whole`: both markers present.
+- `truncated`: some index text present, final line or a target missing.
+- `absent`: no index text found (not loaded, or not captured in the transcript).
+
+Only `whole` sessions count as evidence for violations, relevant-session counts and retire-candidates. `truncated` and `absent` sessions are listed in the report with their hub count (`3/4`). Script: `scripts/km_load_receipt.py` (test: `scripts/test_km_load_receipt.py`). Deliberately simple: if the index format changes (no `](x.md)` links), the receipt reads `absent` rather than guessing. It does not repair a load.
+
 ## §Contradictions (whole graph, tiered)
 
 Lint for meaning: contradictions, and claims superseded by newer ones. `km` reads only files it touches, so this is the only graph-wide check.
