@@ -6,7 +6,7 @@ Topics: `llm-wiki` · `karpathy-llm-wiki` · `claude-code` · `claude-code-plugi
 
 A fork of [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) that turns it on the agent itself: corrections become tested rules, and rules the model outgrows are retired, within a fixed context budget.
 
-The **Solomon Framework** is the method: the thinking behind the capture, re-test and retire loop, set out in [What is different](#what-is-different) and [docs/](docs/). Kainosis is its Claude Code implementation, with two skills:
+The **Solomon Framework** is the method: the thinking behind the capture, re-test and retire loop, set out in [What is different](#what-is-different) and [docs/](docs/). Its own home, written independent of any tool, is [the Solomon Framework gist](https://gist.github.com/ChiefStarKid/bb10932b9dd04752deb4db632f7c6fdc), a fork of Karpathy's. Kainosis is its Claude Code implementation, with two skills:
 - **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case, checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
 - **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes.
 
