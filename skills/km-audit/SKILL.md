@@ -1,6 +1,6 @@
 ---
 name: km-audit
-description: On-demand audit of the memory graph: re-tests rules on the current model, retires unneeded ones, compacts the index within a context budget.
+description: "On-demand audit of the memory graph: re-tests rules on the current model, retires unneeded ones, compacts the index within a context budget."
 ---
 
 # km-audit

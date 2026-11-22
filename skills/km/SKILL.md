@@ -1,6 +1,6 @@
 ---
 name: km
-description: Session close-out for the memory graph: captures rules and facts, records corrections as eval cases, checks graph health. `lean` = cheap offload before /compact.
+description: "Session close-out for the memory graph: captures rules and facts, records corrections as eval cases, checks graph health. `lean` = cheap offload before /compact."
 argument-hint: "[lean]"
 ---
 
