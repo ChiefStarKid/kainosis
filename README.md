@@ -151,9 +151,9 @@ Out of v0.1, planned for later updates:
 - Session grooming as an optional extra (Desktop-only): archive sessions with a searchable catalogue, keep a list of sessions cited as eval evidence, and propose deletes of noise threads for approval. The keep-list and the delete step ship together.
 - `bare_probe.py` beyond Windows (macOS Keychain, Linux secret store).
 - The rules-reminder hook as an example `hooks/` folder.
+- An opt-in example `PreCompact` hook for `km lean`: `km lean` writes its Keep list to a file and the hook returns it as compaction instructions, so a bare `/compact` carries it. Being tested locally first; not shipped enabled, because a plugin hook would change the "no hooks" disclosure. Claude Code cannot start a compaction from a skill or hook today, so `km lean` still ends with the paste-ready `/compact Keep:` line (tracked upstream: anthropics/claude-code#19877).
 - Four more checker scripts, a `Trigger:` backfill for older rules, a Why-exemption for hubs, and calibration of the compaction path-bytes cap.
 
-## Layout
 From comparing notes with [Link](https://github.com/gowtham0992/link), another implementation of the LLM Wiki pattern:
 - **Load receipt.** A per-session check that the always-loaded context arrived whole and was not cut short, added to `km-audit` triage.
 - **Published error rates.** Report how often each check is wrong: retire-candidates later found still needed, probe verdicts that transcripts contradict, and triage correction hits that were false. Make the probe-versus-transcript disagreement a standing metric in `runs.md`.
@@ -161,6 +161,7 @@ From comparing notes with [Link](https://github.com/gowtham0992/link), another i
 - **Harder hooks and checks.** Match `check` patterns and graduated hooks against commands as the shell runs them (inside `&&` chains, `bash -c`, `sudo`), not raw tool input, and stop the agent from editing its own hook files.
 - **Supersession at write time.** A `supersedes:` field written at close-out, so a revised fact names what it replaces and the audit's contradiction pass has fewer pairs to judge.
 
+## Layout
 
 ```
 .claude-plugin/   plugin.json (name, version, options) · marketplace.json
