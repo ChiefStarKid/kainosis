@@ -174,7 +174,6 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
     **Lean:** add `Carry list:` (one short bullet per `thread` item). Make the **last line** of the message ready to paste:
     `/compact Keep: <item>; <item>; ...`
     Keep it short: names and decisions, not prose. With no `thread` items, the last line is `/compact`.
-    Claude Code cannot run `/compact` from a skill or hook, so OWNER always types or pastes it. Optional, and only when OWNER has said in this conversation that they run the opt-in PreCompact hook (README, Roadmap; you cannot detect it, so never assume it): also write the Keep text (the part after `/compact `, i.e. `Keep: ...`) to `<temp dir>/claude/km-keep.txt` (`%TEMP%` on Windows, `$TMPDIR` or `/tmp` elsewhere), overwriting any old file. Then add before the last line: "Or type a bare `/compact`: the hook feeds the Keep list in." Without OWNER's statement, write no file (a stray file would feed a later auto-compaction), and never skip the paste-ready last line.
 
 ## Error handling
 
