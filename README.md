@@ -72,10 +72,10 @@ Without the probe runner, `km-audit` still runs: it skips rule probes and bases 
 
 ## Install
 
-From GitHub (once published):
+From GitHub:
 
 ```bash
-claude plugin marketplace add <owner>/<repo>
+claude plugin marketplace add ChiefStarKid/kainosis
 claude plugin install kainosis@kainosis --config memory_path="<your memory dir>" --config owner_name="<your name>"
 ```
 

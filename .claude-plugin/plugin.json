@@ -6,6 +6,8 @@
   "author": {
     "name": "Joseph Solomon"
   },
+  "homepage": "https://github.com/ChiefStarKid/kainosis",
+  "repository": "https://github.com/ChiefStarKid/kainosis",
   "license": "MIT",
   "keywords": [
     "llm-wiki",
