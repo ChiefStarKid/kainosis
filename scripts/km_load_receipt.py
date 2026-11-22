@@ -1,11 +1,11 @@
 """Load receipt: did the always-loaded MEMORY.md arrive whole in each session?
 
 Used by km-audit triage (docs/evals.md §Load receipt). Reads only the
-opening entries of the *.jsonl transcripts triage already scans, plus
-MEMORY.md. Never writes. Stdlib only.
+opening messages and the `instructions` attachments of the *.jsonl transcripts
+triage already scans, plus MEMORY.md. Never writes. Stdlib only.
 
 Whole = the index's final line AND every index link target appear in the
-session's opening context. Otherwise `truncated` (index text started but cut)
+session's loaded context. Otherwise `truncated` (index text started but cut)
 or `absent` (no index text found). Only `whole` sessions count as retirement
 evidence.
 
@@ -17,7 +17,7 @@ import re
 import sys
 from pathlib import Path
 
-OPENING = 6  # opening entries searched; the load arrives before the first real turn
+OPENING = 6  # opening message entries searched; the load arrives before the first real turn
 LINK = re.compile(r"\]\(([^)\s]+\.md)\)")
 
 
@@ -32,16 +32,19 @@ def opening_text(path):
     out = []
     with open(path, encoding="utf-8") as f:
         for i, raw in enumerate(f):
-            if i >= OPENING:
-                break
             try:
-                msg = json.loads(raw).get("message", {})
+                d = json.loads(raw)
             except ValueError:
                 continue
-            c = msg.get("content", "")
+            msg = d.get("message") or {}
+            c = msg.get("content", "") if isinstance(msg, dict) else ""
             if isinstance(c, list):
                 c = " ".join(b.get("text", "") for b in c if isinstance(b, dict))
-            out.append(str(c))
+            if i < OPENING:
+                out.append(str(c))
+            # real transcripts carry the memory load in an `instructions` attachment
+            for af in (d.get("attachment") or {}).get("files", []):
+                out.append(str(af.get("content", "")))
     return "\n".join(out)
 
 

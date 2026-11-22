@@ -86,9 +86,9 @@ Throwaway Python in the scratchpad, run with `python -X utf8 -I`. Stream the `.j
 
 ## §Load receipt (triage, no LLM)
 
-If the index is cut short at load time, rules stop applying and the audit could read that as the model not needing them. Triage records a receipt per session it scans, using only text it already reads: the opening entries of the session's transcript (first 6 lines of the `.jsonl`) and `MEMORY.md`.
+If the index is cut short at load time, rules stop applying and the audit could read that as the model not needing them. Triage records a receipt per session it scans, using only text it already reads: the session's `instructions` attachments (where Claude Code puts the loaded memory files; they can appear after the first lines of a resumed or long-starting session), the first 6 message entries of its transcript, and `MEMORY.md`.
 
-**Whole** = the index's final non-empty line AND every `.md` link target in the index appear in that opening text. The hub count is the number of distinct link targets in `MEMORY.md`. Receipt values:
+**Whole** = the index's final non-empty line AND every `.md` link target in the index appear in that text. The hub count is the number of distinct link targets in `MEMORY.md`. Receipt values:
 - `whole`: both markers present.
 - `truncated`: some index text present, final line or a target missing.
 - `absent`: no index text found (not loaded, or not captured in the transcript).
