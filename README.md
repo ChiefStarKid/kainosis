@@ -10,7 +10,7 @@ The **Solomon Framework** is the method: the thinking behind the capture, re-tes
 - **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case, checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
 - **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes.
 
-Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history. The original gist carries no licence; this repo contains no text from it, only the pattern described in its own words. Status: v0.1, tested by one person on one profile. See [Results so far](#results-so-far).
+Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history. Status: v0.1, tested by one person on one profile. See [Results so far](#results-so-far).
 
 ## Who it is for
 
