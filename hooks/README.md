@@ -50,3 +50,42 @@ A rule that keeps failing as soft text in memory (the `km-audit` flow: "Soft rul
 - **Reads:** the hook input Claude Code sends on stdin, and its own config file. Nothing else.
 - **Writes:** one JSON object to stdout. No files.
 - **Network:** none.
+
+---
+
+# Example hook: PreCompact Keep list
+
+**Also an example, not registered, not active unless you install it.** It exists because Claude Code cannot start a compaction from a skill or hook, so `km lean` still ends with a paste-ready `/compact Keep: ...` line. This hook lets a bare `/compact` carry the same list.
+
+`precompact_keep.py` is a `PreCompact` hook (Python 3, stdlib only). When a compaction starts it prints `<temp dir>/claude/km-keep.txt` to stdout, which Claude Code uses as instructions for the compaction summary, then deletes the file. It does nothing if the file is missing, empty or older than 30 minutes (it removes a stale one), and it leaves the file alone when you typed your own text after `/compact`.
+
+## Enable it
+
+1. Copy `precompact_keep.py` somewhere stable.
+2. Paste this into your own `~/.claude/settings.json`, with your path (use `python3` if that is your interpreter name):
+
+```json
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "python", "args": ["/path/to/precompact_keep.py"], "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}
+```
+
+3. Tell `km lean`, in that conversation, that you run the hook. It cannot detect it, and without your statement it writes no file. It then also writes the Keep text to the temp file and still prints the paste-ready last line.
+
+The empty matcher also fires on auto-compaction. That is why the file is one-shot and expires: if you run `km lean` and do not compact, an auto-compaction within 30 minutes would use that list.
+
+## What it reads and writes
+
+- **Reads:** the hook input on stdin, and `<temp dir>/claude/km-keep.txt` (`KM_KEEP_FILE` overrides the path).
+- **Writes:** the file's text to stdout (at most 9,000 characters). It deletes the keep file. Nothing else.
+- **Network:** none.
+- `km lean` itself writes that one temp file, only on your say-so.
