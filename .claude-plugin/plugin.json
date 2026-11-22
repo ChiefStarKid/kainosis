@@ -1,7 +1,7 @@
 {
   "name": "kainosis",
   "displayName": "Kainosis",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Implements the Solomon Framework, a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired.",
   "author": {
     "name": "Joseph Solomon"
