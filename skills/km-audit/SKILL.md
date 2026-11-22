@@ -45,7 +45,7 @@ Run the triage script described in `REF` §Triage with `python -X utf8 -I`, from
 
 **Graph metrics:** run `GRAPH --json --reachable-excluding-self <every indexed slug>`. Read-only, owned by km; slugs = keys of `bytes_by_slug`. Use its fields as-is: `islands`, `unreachable`, `dead_links`, `feedback_missing`, `bytes_by_slug`, `reachable_excluding_self`, `route`, `route_excluding_self` (hops, path_bytes, via).
 
-**Contradiction candidates:** scripted pairing per `REF` §Contradictions. No LLM at this tier.
+**Contradiction candidates:** scripted pairing per `REF` §Contradictions. No LLM at this tier. Drop pairs where one file names the other in `supersedes:`, but list each in the report as "skipped: resolved by supersedes" (a wrong `supersedes:` could hide a real contradiction).
 
 Most runs stop here; only Step 2's **flagged** items go further.
 

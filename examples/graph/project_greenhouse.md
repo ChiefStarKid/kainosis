@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
 ---
-**Cluster:** [[reference_sensor_logger]] · [[reference_greenhouse_sheet]] · [[project_seed_order]] · [[feedback_sheet_read_before_write]]
+**Cluster:** [[reference_sensor_logger]] · [[reference_greenhouse_sheet]] · [[project_seed_order]] · [[project_seed_delivery]] · [[feedback_sheet_read_before_write]]
 
 Goal: keep the greenhouse between 18 and 27 °C without daily checks. Status: logging live since 2026-05-02; automatic vent control not started.
 
