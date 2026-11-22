@@ -97,6 +97,12 @@ Options (stored per profile, so two profiles can point at two memory dirs):
 
 The version is pinned in `plugin.json`, so a new commit reaches installed copies only when the version is bumped.
 
+### Example prompts
+
+1. At the end of a session in which you corrected Claude: `/kainosis:km`. It asks what to keep, records each correction as an eval case, and commits the memory changes.
+2. When the context is filling up: `/kainosis:km lean`, then paste the `/compact Keep: …` line it ends with. Claude Code doesn't let a skill start a compaction itself, so this last step stays manual.
+3. After switching to a new model, or once a month: `/kainosis:km-audit`. It reports which rules the model still needs and proposes retiring the rest, with the always-loaded bytes saved.
+
 ### What it reads, writes and sends
 
 Everything stays on your machine except the two items marked **network**.
@@ -156,10 +162,11 @@ skills/km-audit/  SKILL.md
 scripts/          km_graph_check.py · bare_probe.py · bare_probe_token_setup.py
 docs/             schema.md · evals.md · scope-rule.md · evolution.md
 examples/graph/   fictional memory graph
+PRIVACY.md · SECURITY.md · CHANGELOG.md · LICENSE · CITATION.cff
 ```
 
 The plugin id (`kainosis`) sets the command prefix. To rename it, change `name` in `.claude-plugin/plugin.json`, the marketplace `name` and plugin entry `name` in `.claude-plugin/marketplace.json`, and the `/kainosis:` commands and `kainosis@kainosis` install line in this README. The skills never name it.
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE). To cite, see [CITATION.cff](CITATION.cff).
+MIT. See [LICENSE](LICENSE). To cite, see [CITATION.cff](CITATION.cff). Privacy: [PRIVACY.md](PRIVACY.md). Security reports and support: [SECURITY.md](SECURITY.md). Changes: [CHANGELOG.md](CHANGELOG.md).
