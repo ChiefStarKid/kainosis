@@ -1,6 +1,6 @@
 # Privacy
 
-Kainosis is a local Claude Code plugin. It has no servers, accounts, telemetry, analytics, hooks or MCP servers. The author receives no data from it.
+Kainosis is a local Claude Code plugin. It has no servers, accounts, telemetry, analytics or MCP servers, and it registers no hooks. The repository ships an example hook (`hooks/`) that is not active unless you install it yourself; if you do, it reads only its own config file, writes only a short reminder to Claude Code, and makes no network calls. The author receives no data from it.
 
 ## What it reads
 
