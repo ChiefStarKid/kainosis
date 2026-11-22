@@ -93,7 +93,7 @@ If the index is cut short at load time, rules stop applying and the audit could 
 - `truncated`: some index text present, final line or a target missing.
 - `absent`: no index text found (not loaded, or not captured in the transcript).
 
-Only `whole` sessions count as evidence for violations, relevant-session counts and retire-candidates. `truncated` and `absent` sessions are listed in the report with their hub count (`3/4`). Script: `scripts/km_load_receipt.py` (test: `scripts/test_km_load_receipt.py`). Deliberately simple: if the index format changes (no `](x.md)` links), the receipt reads `absent` rather than guessing. It does not repair a load.
+Only `whole` sessions count as evidence for violations, relevant-session counts and retire-candidates. `truncated` and `absent` sessions are listed in the report with their hub count (`3/4`). Script: `scripts/km_load_receipt.py` (test: `scripts/test_km_load_receipt.py`). Deliberately simple: if the index format changes (no `](x.md)` links), the receipt reads `absent` rather than guessing. The receipt also records the session's start and `MEMORY.md`'s modified time; a non-whole receipt whose index was edited after the session began is flagged `stale_index` (the mismatch may be an edit, not a cut). It is still excluded, and the report notes it. It does not repair a load.
 
 ## §Contradictions (whole graph, tiered)
 
