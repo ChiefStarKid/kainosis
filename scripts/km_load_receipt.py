@@ -1,13 +1,14 @@
 """Load receipt: did the always-loaded MEMORY.md arrive whole in each session?
 
 Used by km-audit triage (docs/evals.md §Load receipt). Reads only the
-opening entries of the *.jsonl transcripts triage already scans, plus
-MEMORY.md. Never writes. Stdlib only.
+opening messages and the `instructions` attachments of the *.jsonl transcripts
+triage already scans, plus MEMORY.md. Never writes. Stdlib only.
 
 Whole = the index's final line AND every index link target appear in the
-session's opening context. Otherwise `truncated` (index text started but cut)
+session's loaded context. Otherwise `truncated` (index text started but cut)
 or `absent` (no index text found). Only `whole` sessions count as retirement
-evidence.
+evidence. `stale_index` flags a non-whole receipt whose MEMORY.md was
+modified after the session started (the mismatch may be an edit, not a cut).
 
 Usage: python km_load_receipt.py --mem <dir> <transcript.jsonl>... [--json]
 """
@@ -15,9 +16,10 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
-OPENING = 6  # opening entries searched; the load arrives before the first real turn
+OPENING = 6  # opening message entries searched; the load arrives before the first real turn
 LINK = re.compile(r"\]\(([^)\s]+\.md)\)")
 
 
@@ -28,25 +30,37 @@ def expected(mem):
     return lines[-1].strip(), targets
 
 
+def parse_ts(ts):
+    try:
+        return datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
 def opening_text(path):
-    out = []
+    out, start = [], None
     with open(path, encoding="utf-8") as f:
         for i, raw in enumerate(f):
-            if i >= OPENING:
-                break
             try:
-                msg = json.loads(raw).get("message", {})
+                d = json.loads(raw)
             except ValueError:
                 continue
-            c = msg.get("content", "")
+            if start is None:
+                start = parse_ts(d.get("timestamp"))
+            msg = d.get("message") or {}
+            c = msg.get("content", "") if isinstance(msg, dict) else ""
             if isinstance(c, list):
                 c = " ".join(b.get("text", "") for b in c if isinstance(b, dict))
-            out.append(str(c))
-    return "\n".join(out)
+            if i < OPENING:
+                out.append(str(c))
+            # real transcripts carry the memory load in an `instructions` attachment
+            for af in (d.get("attachment") or {}).get("files", []):
+                out.append(str(af.get("content", "")))
+    return "\n".join(out), start
 
 
-def receipt(path, last, targets):
-    text = opening_text(path)
+def receipt(path, last, targets, index_mtime):
+    text, start = opening_text(path)
     found = [t for t in targets if t in text]
     if not found and last not in text:
         status = "absent"
@@ -54,8 +68,12 @@ def receipt(path, last, targets):
         status = "whole"
     else:
         status = "truncated"
+    # index edited after the session began: a non-whole status may only mean MEMORY.md changed since
+    stale = status != "whole" and start is not None and index_mtime > start
     return {"session": Path(path).stem, "status": status,
-            "hubs": f"{len(found)}/{len(targets)}", "last_line": last in text}
+            "hubs": f"{len(found)}/{len(targets)}", "last_line": last in text,
+            "session_start": start.isoformat() if start else None,
+            "index_modified": index_mtime.isoformat(), "stale_index": stale}
 
 
 def main():
@@ -65,12 +83,14 @@ def main():
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
     last, targets = expected(a.mem)
-    rs = [receipt(p, last, targets) for p in a.transcripts]
+    mtime = datetime.fromtimestamp((Path(a.mem) / "MEMORY.md").stat().st_mtime, timezone.utc)
+    rs = [receipt(p, last, targets, mtime) for p in a.transcripts]
     if a.json:
         print(json.dumps(rs, indent=1))
     else:
         for r in rs:
-            print(f"{r['status']:9} hubs {r['hubs']:6} last-line {'yes' if r['last_line'] else 'NO '} {r['session']}")
+            print(f"{r['status']:9} hubs {r['hubs']:6} last-line {'yes' if r['last_line'] else 'NO '} {r['session']}"
+                  + ("  (index edited since session start)" if r["stale_index"] else ""))
     return 0
 
 
