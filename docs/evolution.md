@@ -5,7 +5,8 @@ Dated changes that shaped the design, each with the constraint behind it (see th
 | Date | Change | Constraint |
 |---|---|---|
 | 2026-04-04 | Karpathy publishes the LLM Wiki gist: LLM-maintained wiki, index, log, lint. | — |
-| 2026-07-06 | A planned second tier of sub-index files between MEMORY.md and the leaves sat unwired for weeks; deleted. The index became hub-and-spoke: MEMORY.md links hubs, hubs' `Cluster:` lines link spokes. | Small token budget |
+| 2026-06-13 | The flat index rebuilt as hub-and-spoke: MEMORY.md links hubs, hubs' `Cluster:` lines link spokes. | Small token budget |
+| 2026-07-06 | A planned second tier of sub-index files between MEMORY.md and the leaves sat unwired for weeks; deleted. | Small token budget |
 | 2026-07-08 | Close-out plan gate removed; the Q&A round is the confirmation step. | Small token budget |
 | 2026-07-20 | Only `[[ ]]` wikilinks count as graph links; group hubs gained a `Members:` line after ~40 members read as islands. | — |
 | 2026-11-20 | Objective reset: context efficiency first, and eval asks "does the current model still need this rule?". Added `basis` tags, `eval/cases.jsonl`, the lean pre-compact run, targeted reads (the old full read of the graph exceeded the context window), and `km_graph_check.py`. | Can't always use the best model; small token budget |
