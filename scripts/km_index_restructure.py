@@ -4,7 +4,7 @@ Stdlib only. Reachability is km_graph_check.analyse() itself, not a copy.
 
 Commands (all read-only except `apply`):
   propose --mem M --out D [--max-hubs 4] [--min-group 3]
-      Groups M's feedback index lines into theme hubs. Writes a CANDIDATE memory
+      Groups M's feedback index lines into theme hubs (by slug, title and description words). Writes a CANDIDATE memory
       (top-level *.md of M + new MEMORY.md + hub files) into the empty/new folder
       D, never into M. Prints a JSON report: bytes before/after, groups, queries,
       replay. Exit 0 = replay passes, 1 = replay blocks the change.
@@ -66,19 +66,28 @@ def feedback_lines(mem):
     return out
 
 
+def tokens(it):
+    """Slug words plus title/description words (>= 4 letters), so slugs that share no word can still group."""
+    extra = {w for w in re.findall(r"[a-z]{4,}", f"{it[3]} {it[4]}".lower()) if w not in STOP}
+    return set(words(it[2])) | extra
+
+
 def group(items, max_hubs, min_group):
-    """Greedy: the slug word shared by most unassigned lines (>= min_group) names a hub."""
-    left = list(items)
-    groups = []
+    """Greedy: the word shared by most unassigned lines (>= min_group) names a hub. Words present
+    in over half of all lines are too generic to be a theme; slug words win ties."""
+    generic = {w for w, n in Counter(w for it in items for w in tokens(it)).items() if n > len(items) / 2}
+    toks = {it[2]: tokens(it) - generic for it in items}
+    left, groups = list(items), []
     while left and len(groups) < max_hubs - 1:
-        freq = Counter(w for it in left for w in set(words(it[2])))
+        freq = Counter(w for it in left for w in toks[it[2]])
+        slugw = {w for it in left for w in words(it[2])}
         if not freq:
             break
-        word, n = max(sorted(freq.items()), key=lambda kv: kv[1])
+        word, n = max(sorted(freq.items()), key=lambda kv: (kv[1], kv[0] in slugw))
         if n < min_group:
             break
-        groups.append((word, [it for it in left if word in words(it[2])]))
-        left = [it for it in left if word not in words(it[2])]
+        groups.append((word, [it for it in left if word in toks[it[2]]]))
+        left = [it for it in left if word not in toks[it[2]]]
     if left:  # remainder is the last hub, so no line is left in MEMORY.md
         groups.append(("other", left))
     return groups
