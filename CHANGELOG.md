@@ -4,6 +4,16 @@ Versions follow `plugin.json`. Installed copies update only when the version is 
 
 Any change to what the plugin reads, writes or sends is listed under **Data handling** in its release, and [PRIVACY.md](PRIVACY.md) is updated in the same release.
 
+## 0.2.2
+
+- Changed: the example PreCompact hook (`hooks/precompact_keep.py`) now logs each run, so you can see whether it fired ([#6](https://github.com/ChiefStarKid/kainosis/issues/6)). `hooks/README.md` documents the log and a tip: queue `/compact` while `km lean` is still running and it fires after the Q&A.
+- Known limit: the Keep file is shared. Any session compacting in the same profile can consume it, so a second session's compaction can take it before yours does. One queued test run failed this way, and the cause is likely, not proven.
+- Tested: typed `/compact` passed twice and `/compact` queued after `km lean` passed once, on Windows with a user-level copy of the hook. Not yet tested: this repo copy through a real `/compact`, `km lean` writing the file end to end, automatic compaction, macOS and Linux.
+
+**Data handling:**
+- The example hook, if you install it, appends one line per run (time, session id, trigger and what it did, never the Keep text) to `<temp dir>/claude/km-keep-hook.log` on your machine. The log is never rotated or sent anywhere; delete it any time.
+- Nothing else changes. The plugin still registers no hook, and `km lean` still writes the Keep file only when you say you run the hook. [PRIVACY.md](PRIVACY.md) is updated to match.
+
 ## 0.2.1
 
 - Added: an opt-in example `PreCompact` hook for `km lean` ([#6](https://github.com/ChiefStarKid/kainosis/issues/6)): `hooks/precompact_keep.py`, with an enable guide in `hooks/README.md`. When you have said in the session that you run it, `km lean` writes its Keep list to a file and a bare `/compact` then carries the list as compaction instructions. Claude Code cannot start a compaction from a skill or hook (tracked upstream: anthropics/claude-code#19877), so `km lean` still ends with the paste-ready `/compact Keep:` line.
