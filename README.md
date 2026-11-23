@@ -149,19 +149,20 @@ Expected: 11 files, 0 islands, 0 unreachable, 0 dead links, nothing missing.
 
 From my own profile's memory, 2026-11-20 to 2026-11-21. One person, one profile: indicative, not proof.
 
-In short: the always-loaded index shrank by almost 40% while staying correct, and the one rule that looked safe to retire but wasn't was caught by real sessions.
+In short: the always-loaded index shrank by almost 40% while staying correct, and the one rule that looked safe to retire but wasn't was caught by real sessions. A second cluster retired nothing: the method kept every rule it could not back with a second source.
 
 - **MEMORY.md:** 21,233 bytes before the first rules pilot; 20,580 at the start of the first audit; 15,316 after it; 13,039 bytes today. Always-loaded context in that first audit fell from 28,886 to 23,622 bytes.
 - **Feedback rules:** 179 files before the pilot; 167 at the rules pass, when every one was tagged with a `basis`; 91 today. The rest were merged, moved to the tool docs where they apply, graduated into a hook, or retired to `dormant/`.
 - **Graph health today:** 256 files, 0 islands, 0 unreachable, 0 dead links. The first audit took unreachable files from 8 to 0 and dead links from 2 to 0.
 - **Probes:** 104 bare-context runs on 10 compensation rules across two models. 4 rules passed 3/3 without their text on both models and were retired; 3 were still needed. One rule passed its probes yet transcripts showed it broken in 614 of 1,073 shell calls on one model, so it went to a hook instead: a transcript violation outranks a probe pass.
 - **Hooks:** 11 rules graduated into one reminder hook; their text left memory.
+- **Second cluster (spreadsheet and document handling), later in November 2026:** 17 rules (8 compensation, 4 fact, 5 preference). 100 bare-context runs on 6 compensation rules across two models: 1 still needed; 4 passed every probe but were kept, because no transcripts covered that work and a probe pass alone never retires a rule; 1 passed but transcripts show 5 likely lapses, so it stays as a hook candidate. 0 retired; rule count and index size unchanged. Scoring was model-graded except one regex check. Details: [docs/second-cluster.md](docs/second-cluster.md).
 
 ## Roadmap
 
 The roadmap lives in [GitHub issues labelled `roadmap`](https://github.com/ChiefStarKid/kainosis/issues?q=is%3Aissue+is%3Aopen+label%3Aroadmap); [milestone v0.2](https://github.com/ChiefStarKid/kainosis/milestone/1) holds what has shipped. Headlines:
 - **Shipped in v0.2:** capture from the owner's words only ([#10](https://github.com/ChiefStarKid/kainosis/issues/10)), a load receipt ([#8](https://github.com/ChiefStarKid/kainosis/issues/8)), a `supersedes:` field ([#12](https://github.com/ChiefStarKid/kainosis/issues/12)) and an example rules-reminder hook ([#5](https://github.com/ChiefStarKid/kainosis/issues/5)); in v0.2.1, an example PreCompact hook for `km lean` ([#6](https://github.com/ChiefStarKid/kainosis/issues/6)). See the [CHANGELOG](CHANGELOG.md).
-- **Later:** a second-cluster proof of the method, `bare_probe.py` beyond Windows, published error rates for each check, harder hooks and opt-in session grooming.
+- **Later:** `bare_probe.py` beyond Windows, published error rates for each check, harder hooks and opt-in session grooming.
 
 Items marked `data-handling` change what the plugin reads, writes or sends; they ship with a CHANGELOG "Data handling" note and a PRIVACY.md update. Several items came from comparing notes with [Link](https://github.com/gowtham0992/link), another implementation of the LLM Wiki pattern.
 
@@ -172,7 +173,7 @@ Items marked `data-handling` change what the plugin reads, writes or sends; they
 skills/km/        SKILL.md
 skills/km-audit/  SKILL.md
 scripts/          km_graph_check.py · bare_probe.py · bare_probe_token_setup.py
-docs/             schema.md · evals.md · scope-rule.md · evolution.md
+docs/             schema.md · evals.md · scope-rule.md · evolution.md · second-cluster.md
 hooks/            example hooks, not registered: rules_reminder.py · precompact_keep.py
 examples/graph/   fictional memory graph
 PRIVACY.md · SECURITY.md · CHANGELOG.md · LICENSE · CITATION.cff
