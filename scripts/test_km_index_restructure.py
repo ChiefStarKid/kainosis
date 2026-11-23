@@ -59,6 +59,18 @@ with tempfile.TemporaryDirectory() as td:
     print(f"GOOD: ok, MEMORY.md {rep['bytes_before']} -> {rep['bytes_after']} bytes "
           f"(saved {rep['bytes_saved']}), {rep['queries']} queries, 0 pass->fail, groups {rep['groups']}")
 
+    # 1b. owner-supplied themes: two named hubs, the rest in `other`; unknown slug is refused
+    spec = td / "themes.json"
+    spec.write_text(json.dumps({"Hot work": [f"feedback_oven_preheat_{i}" for i in (0, 6, 12)],
+                                "money": ["feedback_pricing_margin_0"]}), encoding="utf-8")
+    rc, out, err = run("propose", "--mem", str(mem), "--out", str(td / "cand_t"), "--themes", str(spec))
+    rep = json.loads(out)
+    assert rc == 0 and rep["groups"] == {"hot_work": 3, "money": 1, "other": 116}, rep["groups"]
+    spec.write_text(json.dumps({"x": ["feedback_nope"]}), encoding="utf-8")
+    rc, _, err = run("propose", "--mem", str(mem), "--out", str(td / "cand_t2"), "--themes", str(spec))
+    assert rc != 0 and "not a feedback index line" in err
+    print("THEMES file: 3 groups honoured, unknown slug refused")
+
     # 2. bad restructure: a hub silently drops one slug's line -> blocked
     bad = td / "bad"
     shutil.copytree(td / "cand", bad)

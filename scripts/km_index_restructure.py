@@ -3,7 +3,7 @@ oversized MEMORY.md. Used by km-audit Step 4 ("restructure index into theme hubs
 Stdlib only. Reachability is km_graph_check.analyse() itself, not a copy.
 
 Commands (all read-only except `apply`):
-  propose --mem M --out D [--max-hubs 4] [--min-group 3]
+  propose --mem M --out D [--max-hubs 4] [--min-group 3] [--themes themes.json]
       Groups M's feedback index lines into theme hubs (by slug, title and description words). Writes a CANDIDATE memory
       (top-level *.md of M + new MEMORY.md + hub files) into the empty/new folder
       D, never into M. Prints a JSON report: bytes before/after, groups, queries,
@@ -90,6 +90,30 @@ def group(items, max_hubs, min_group):
         left = [it for it in left if word not in toks[it[2]]]
     if left:  # remainder is the last hub, so no line is left in MEMORY.md
         groups.append(("other", left))
+    return groups
+
+
+def themed(items, path):
+    """--themes file: JSON {"theme": ["slug", ...]}. Unlisted feedback lines form the `other` hub."""
+    spec = json.loads(path.read_text(encoding="utf-8"))
+    by_slug = {it[2]: it for it in items}
+    seen, groups = set(), []
+    for theme, slugs in spec.items():
+        name = re.sub(r"[^a-z0-9_]+", "_", theme.lower()).strip("_")
+        if not name:
+            sys.exit(f"bad theme name: {theme!r}")
+        for s in slugs:
+            s = s.removesuffix(".md")
+            if s not in by_slug:
+                sys.exit(f"--themes names {s}, which is not a feedback index line")
+            if s in seen:
+                sys.exit(f"--themes lists {s} twice")
+            seen.add(s)
+        if slugs:
+            groups.append((name, [by_slug[s.removesuffix(".md")] for s in slugs]))
+    rest = [it for it in items if it[2] not in seen]
+    if rest:
+        groups.append(("other", rest))
     return groups
 
 
@@ -188,6 +212,7 @@ def main():
             p.add_argument("--out", type=Path, required=True)
             p.add_argument("--max-hubs", type=int, default=4)
             p.add_argument("--min-group", type=int, default=3)
+            p.add_argument("--themes", type=Path, help='JSON {"theme": ["slug", ...]} to use instead of auto-grouping')
         else:
             p.add_argument("--candidate", type=Path, required=True)
         if name == "apply":
@@ -199,7 +224,7 @@ def main():
         items = feedback_lines(a.mem)
         if not items:
             sys.exit("no feedback index lines to restructure")
-        groups = group(items, a.max_hubs, a.min_group)
+        groups = themed(items, a.themes) if a.themes else group(items, a.max_hubs, a.min_group)
         build_candidate(a.mem, a.out, groups)
         rep = replay(a.mem, a.out, a.hops)
         rep["groups"] = {t: len(ms) for t, ms in groups}
