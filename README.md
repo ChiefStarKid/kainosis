@@ -14,7 +14,7 @@ The **Solomon Framework** is the method: the thinking behind the capture, re-tes
 - **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case (the situation, what you expected and the model that failed), checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
 - **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes (the size of what every session reads before you type).
 
-Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history. Status: plugin v0.2.0; the method is tested by one person on one profile. See [Results so far](#results-so-far).
+Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history. Status: plugin v0.2.1; the method is tested by one person on one profile. See [Results so far](#results-so-far).
 
 ### Terms
 
@@ -112,7 +112,7 @@ The version is pinned in `plugin.json`, so a new commit reaches installed copies
 ### Example prompts
 
 1. At the end of a session in which you corrected Claude: `/kainosis:km`. It asks what to keep, records each correction as an eval case, and commits the memory changes.
-2. When the context is filling up: `/kainosis:km lean`, then paste the `/compact Keep: …` line it ends with. Claude Code doesn't let a skill start a compaction itself, so this last step stays manual.
+2. When the context is filling up: `/kainosis:km lean`, then paste the `/compact Keep: …` line it ends with. Claude Code doesn't let a skill start a compaction itself, so this last step stays manual. If you run the optional PreCompact example hook and tell `km lean` so, a bare `/compact` carries the Keep list instead.
 3. After switching to a new model, or once a month: `/kainosis:km-audit`. It reports which rules the model still needs and proposes retiring the rest, with the always-loaded bytes saved.
 
 ### What it reads, writes and sends
@@ -121,13 +121,13 @@ Everything stays on your machine except the two items marked **network**.
 
 | Component | Reads | Writes | Network |
 |---|---|---|---|
-| `km` | The current conversation; files in `memory_path`; your `scope_rule_file` | Memory files, `MEMORY.md`, `log.md` and `eval/*.jsonl` inside `memory_path` | If `memory_path` is in a git repo it commits there. It runs `git push` to **your own remote** only if your scope file says to, to the branch it names; never a force-push |
+| `km` | The current conversation; files in `memory_path`; your `scope_rule_file` | Memory files, `MEMORY.md`, `log.md` and `eval/*.jsonl` inside `memory_path`. `km lean` also writes `<temp dir>/claude/km-keep.txt` (the Keep line already shown in the chat), only when you have said in that conversation that you run the PreCompact example hook | If `memory_path` is in a git repo it commits there. It runs `git push` to **your own remote** only if your scope file says to, to the branch it names; never a force-push |
 | `km-audit` | Files in `memory_path`; your past Claude Code session transcripts in your config dir (`<config dir>/projects/*/*.jsonl`, at most the 60 newest since the last run); for the load receipt, their loaded-instructions entries, and with the optional `--history` flag read-only `git log`/`git show` in your memory repo | Memory files and `eval/` state inside `memory_path`, and a plan file in the session scratchpad | Commits like `km`; never pushes unless you say so in the session. Rule probes go through `bare_probe.py` (below) |
 | `scripts/km_graph_check.py` | Files in `memory_path` | Nothing | None |
 | `scripts/bare_probe.py` (optional, Windows) | A token you stored in Windows Credential Manager (`ClaudeBareProbe-OAuth`) | An empty config folder and a work folder under `--root` / `KM_BARE_ROOT` (default `<system drive>\km-bare-probe`) | **network:** runs `claude -p` to send short test prompts to Anthropic, as you, with that token. A prompt is a scenario rebuilt from one of your recorded cases and, in one of the two arms, the text of the rule under test |
 | `scripts/bare_probe_token_setup.py` (optional, once) | Your clipboard (the token you copied from `claude setup-token`) | The token into Windows Credential Manager; then it clears the clipboard. It prints only the token's length | None |
 
-No telemetry, no other services, no MCP servers, and the plugin registers no hooks. The repo ships an example rules-reminder hook in `hooks/` that is not active unless you install it (it reads only its own config, no network). The plugin itself stores your name, memory files and eval state only on your machine. As in any Claude Code session, whatever the skills read into the conversation (memory files, transcript excerpts) goes to the model you are using; beyond that, data leaves your machine only as probe prompts sent by `bare_probe.py` and whatever you choose to push to your own git remote.
+No telemetry, no other services, no MCP servers, and the plugin registers no hooks. The repo ships two example hooks in `hooks/`, neither active unless you install it ([enable guide](hooks/README.md)); neither uses the network. The rules-reminder hook reads only its own config. The PreCompact hook reads `<temp dir>/claude/km-keep.txt` when a compaction starts, passes it on as compaction instructions and deletes it; a file older than 30 minutes is removed unused. It has been tested on one real `/compact` on Windows; other systems and auto-compaction are untested. The plugin itself stores your name, memory files and eval state only on your machine. As in any Claude Code session, whatever the skills read into the conversation (memory files, transcript excerpts) goes to the model you are using; beyond that, data leaves your machine only as probe prompts sent by `bare_probe.py` and whatever you choose to push to your own git remote.
 
 ### Python prerequisites
 
@@ -160,8 +160,8 @@ In short: the always-loaded index shrank by almost 40% while staying correct, an
 ## Roadmap
 
 The roadmap lives in [GitHub issues labelled `roadmap`](https://github.com/ChiefStarKid/kainosis/issues?q=is%3Aissue+is%3Aopen+label%3Aroadmap); [milestone v0.2](https://github.com/ChiefStarKid/kainosis/milestone/1) holds what has shipped. Headlines:
-- **Shipped in v0.2:** capture from the owner's words only ([#10](https://github.com/ChiefStarKid/kainosis/issues/10)), a load receipt ([#8](https://github.com/ChiefStarKid/kainosis/issues/8)), a `supersedes:` field ([#12](https://github.com/ChiefStarKid/kainosis/issues/12)) and an example rules-reminder hook ([#5](https://github.com/ChiefStarKid/kainosis/issues/5)). See the [CHANGELOG](CHANGELOG.md).
-- **Later:** a second-cluster proof of the method, `bare_probe.py` beyond Windows, published error rates for each check, harder hooks, opt-in session grooming, and an opt-in `PreCompact` hook for `km lean` (being tested locally; [#6](https://github.com/ChiefStarKid/kainosis/issues/6)).
+- **Shipped in v0.2:** capture from the owner's words only ([#10](https://github.com/ChiefStarKid/kainosis/issues/10)), a load receipt ([#8](https://github.com/ChiefStarKid/kainosis/issues/8)), a `supersedes:` field ([#12](https://github.com/ChiefStarKid/kainosis/issues/12)) and an example rules-reminder hook ([#5](https://github.com/ChiefStarKid/kainosis/issues/5)); in v0.2.1, an example PreCompact hook for `km lean` ([#6](https://github.com/ChiefStarKid/kainosis/issues/6)). See the [CHANGELOG](CHANGELOG.md).
+- **Later:** a second-cluster proof of the method, `bare_probe.py` beyond Windows, published error rates for each check, harder hooks and opt-in session grooming.
 
 Items marked `data-handling` change what the plugin reads, writes or sends; they ship with a CHANGELOG "Data handling" note and a PRIVACY.md update. Several items came from comparing notes with [Link](https://github.com/gowtham0992/link), another implementation of the LLM Wiki pattern.
 
@@ -173,6 +173,7 @@ skills/km/        SKILL.md
 skills/km-audit/  SKILL.md
 scripts/          km_graph_check.py · bare_probe.py · bare_probe_token_setup.py
 docs/             schema.md · evals.md · scope-rule.md · evolution.md
+hooks/            example hooks, not registered: rules_reminder.py · precompact_keep.py
 examples/graph/   fictional memory graph
 PRIVACY.md · SECURITY.md · CHANGELOG.md · LICENSE · CITATION.cff
 ```
