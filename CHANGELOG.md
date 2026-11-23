@@ -4,6 +4,16 @@ Versions follow `plugin.json`. Installed copies update only when the version is 
 
 Any change to what the plugin reads, writes or sends is listed under **Data handling** in its release, and [PRIVACY.md](PRIVACY.md) is updated in the same release.
 
+## 0.2.1
+
+- Added: an opt-in example `PreCompact` hook for `km lean` ([#6](https://github.com/ChiefStarKid/kainosis/issues/6)): `hooks/precompact_keep.py`, with an enable guide in `hooks/README.md`. When you have said in the session that you run it, `km lean` writes its Keep list to a file and a bare `/compact` then carries the list as compaction instructions. Claude Code cannot start a compaction from a skill or hook (tracked upstream: anthropics/claude-code#19877), so `km lean` still ends with the paste-ready `/compact Keep:` line.
+- Tested: one real `/compact` on Windows, using a user-level copy of the hook with the same logic. Not yet tested: this repo copy through a real `/compact`, `km lean` writing the file end to end, automatic compaction, macOS and Linux.
+
+**Data handling:**
+- `km lean` can now write one file, `<temp dir>/claude/km-keep.txt` (`%TEMP%` on Windows, `$TMPDIR` or `/tmp` elsewhere). It holds the `Keep: ...` text `km lean` already shows in the chat, and it is written only when you have said in that conversation that you run the example hook.
+- The example hook is not registered: there is no `hooks.json` and `plugin.json` does not reference `hooks/`. If you install it yourself it reads that file on `PreCompact`, prints it as compaction instructions and deletes it. A file older than 30 minutes is removed unused. No network.
+- [PRIVACY.md](PRIVACY.md) is updated to match.
+
 ## 0.2.0
 
 - Added: capture from the owner's words only ([#10](https://github.com/ChiefStarKid/kainosis/issues/10)). `km` and `km-audit` take cases and rules only from the owner's own turns; tool-result text needs the owner's approval, shown with its source (`docs/schema.md` A7). Idea from [Link](https://github.com/gowtham0992/link) by gowtham0992.
