@@ -1,20 +1,32 @@
 # Kainosis
 
-**A Claude Code plugin implementing the Solomon Framework: a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired.**
+**Claude's memory only grows. This plugin tests each rule against the current model and stops loading the ones it no longer needs, so your memory gets smaller as models get better.**
 
 Topics: `llm-wiki` · `karpathy-llm-wiki` · `claude-code` · `claude-code-plugin` · `claude-skills` · `agent-memory` · `llm-memory` · `knowledge-graph` · `knowledge-management` · `personal-knowledge-management` · `context-engineering` · `context-window` · `llm-evaluation` · `evals` · `ai-agents` · `coding-agents` · `memory-pruning` · `second-brain` · `markdown` · `hub-and-spoke`
 
 A fork of [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) that turns it on the agent itself: corrections become tested rules, and rules the model outgrows are retired, within a fixed context budget.
 
-The **Solomon Framework** is the method: the thinking behind the capture, re-test and retire loop, set out in [What is different](#what-is-different) and [docs/](docs/). Its own home, written independent of any tool, is [the Solomon Framework gist](https://gist.github.com/ChiefStarKid/bb10932b9dd04752deb4db632f7c6fdc), a fork of Karpathy's. Kainosis is its Claude Code implementation, with two skills:
-- **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case, checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
-- **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes.
+**Before:** your memory says "read a sheet's header before writing to it", and every session pays for that line. **After:** `km-audit` runs the situation on the current model with and without the rule. If the model gets it right without being told, and your past sessions agree, the rule moves to `dormant/` and stops loading. "Sensor readings are tenths of a degree" is private knowledge no model can guess, so it stays.
 
-Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history. Status: v0.1, tested by one person on one profile. See [Results so far](#results-so-far).
+**Use this if** you use Claude Code every day, keep memory or `CLAUDE.md` files, keep correcting Claude, and those files keep growing.
 
-## Who it is for
+The **Solomon Framework** is the method: the thinking behind the capture, re-test and retire loop, set out in [What is different](#what-is-different) and [docs/](docs/). Its own home, written independent of any tool, is [the Solomon Framework gist](https://gist.github.com/ChiefStarKid/bb10932b9dd04752deb4db632f7c6fdc), a fork of Karpathy's. The gist treats the AI harness as an operating system with three jobs: what gets loaded, what gets written and how sessions relate. Kainosis implements the memory part. Connecting mail and other systems is not part of the plugin. It has two skills:
+- **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case (the situation, what you expected and the model that failed), checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
+- **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes (the size of what every session reads before you type).
 
-I built this under constraints that I think many corporate knowledge workers share. Each one forced a design choice.
+Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history. Status: plugin v0.2.0; the method is tested by one person on one profile. See [Results so far](#results-so-far).
+
+### Terms
+
+- **Basis tag:** each rule is tagged `fact` or `preference` (permanent), or `compensation` (guards a model weakness, so it can retire).
+- **Probe:** a clean-room test of a rule, run with and without its text on the current model, with no memory or tools loaded.
+- **Retire:** move a rule to `dormant/`, where it no longer loads and can be moved back.
+- **Graduate:** replace a rule's text with a hook (a script Claude Code runs around a tool call) that enforces it.
+- **Hub-and-spoke:** `MEMORY.md` points to a few hubs, and each hub lists its pages, so the index stays small as pages grow.
+
+## Use this if
+
+Beyond the line above, it fits best if you work under constraints like these, which I think many corporate knowledge workers share. Each one forced a design choice.
 
 | Constraint | Design it forced |
 |---|---|
@@ -23,7 +35,7 @@ I built this under constraints that I think many corporate knowledge workers sha
 | No control over corporate repositories | Sources stored as pointers, never reorganised or copied; work and personal kept in separate profiles (one config dir each), so each profile sets its own memory path and scope rule |
 | Locations change without warning | Pointers repaired when used, not swept; unused and stale is acceptable |
 
-Karpathy's gist implicitly assumes a person who owns their sources, uses a frontier model and has context to spare.
+The original pattern fits well when you own your sources, run a frontier model and have context to spare. Take those away and the design has to change.
 
 ## What is different
 
@@ -136,6 +148,8 @@ Expected: 11 files, 0 islands, 0 unreachable, 0 dead links, nothing missing.
 ## Results so far
 
 From my own profile's memory, 2026-11-20 to 2026-11-21. One person, one profile: indicative, not proof.
+
+In short: the always-loaded index shrank by almost 40% while staying correct, and the one rule that looked safe to retire but wasn't was caught by real sessions.
 
 - **MEMORY.md:** 21,233 bytes before the first rules pilot; 20,580 at the start of the first audit; 15,316 after it; 13,039 bytes today. Always-loaded context in that first audit fell from 28,886 to 23,622 bytes.
 - **Feedback rules:** 179 files before the pilot; 167 at the rules pass, when every one was tagged with a `basis`; 91 today. The rest were merged, moved to the tool docs where they apply, graduated into a hook, or retired to `dormant/`.
