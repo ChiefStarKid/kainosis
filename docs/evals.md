@@ -98,6 +98,22 @@ If the index is cut short at load time, rules stop applying and the audit could 
 
 **Evidence rule:** only `whole` sessions count as evidence for violations, relevant-session counts and retire-candidates. `truncated` is a real cut and is listed. `unknown` sessions are listed separately with their hub count, are never reported as truncated, and likewise do not count as evidence either way (a violation seen in one is not counted against a rule, and its silence does not support retiring one). Script: `scripts/km_load_receipt.py` (test: `scripts/test_km_load_receipt.py`). Deliberately simple: if the index format changes (no `](x.md)` links), the receipt reads `absent` rather than guessing. It does not repair a load.
 
+## §Restructure (index into theme hubs)
+
+For an index that has to be restructured, not just trimmed (drop-lines candidates too few or failing replay; load receipts show `truncated`). Moving lines keeps every memory reachable at a lower always-loaded cost; dropping them does not. Script: `scripts/km_index_restructure.py` (test: `scripts/test_km_index_restructure.py`, synthetic 120-rule graph). Stdlib only; reachability is `km_graph_check.analyse()` itself.
+
+1. **Propose** (`propose --mem M --out D`): the feedback index lines are grouped greedily by the slug word shared by most lines (min 3, at most 4 hubs; the remainder forms an `other` hub, so no line stays behind). It writes a candidate folder `D` (never `M`): one `index_feedback_<theme>.md` hub per group holding the original lines byte-identical plus a `**Members:**` wikilink row, and a MEMORY.md with one line per hub in place of the moved lines. The owner may rename or regroup; rerun `replay` on the edited candidate.
+2. **Queries:** one per moved slug. An existing `retrieval.jsonl` query is reused; otherwise one is generated from the line's title and description (the audit may reword it per §Retrieval replay and appends it with `"session":"audit:YYYY-MM-DD"`).
+3. **Replay before and after:** each query's expected slug must be reachable from MEMORY.md within the hop budget (default 2: the hub, then the member) in the current and the candidate index. The LLM retrieval replay (§Retrieval replay, citation-grounded) runs on the same queries against the candidate index.
+4. **Blocks** (exit 1): any query pass→fail; a one-line description missing or altered; a newly unreachable file. No partial approval of the groups: fix the candidate and replay again.
+5. **Apply** only on the owner's yes: `apply --mem M --candidate D --owner-approved` re-runs replay, refuses when it blocks, and copies MEMORY.md and the new hubs. Commit it like other structural changes; revert = `git revert`.
+
+Report in the plan: groups and sizes, bytes before/after, queries and results, hop budget.
+
+**Truncation priority.** A `truncated` load receipt (§Load receipt) means rules were cut off at load time. It outranks the 17,000-byte target and every other finding, and applies even when the index is under target (the loader limit, not the target, is what cut it).
+
+**Stale-name check (Step 0).** After a rename of a skill or command, the owner's CLAUDE.md files may still name the old command or a path that no longer exists. It searches the CLAUDE.md files Step 0 item 4 already loads, and checks that the paths they name exist (existence only; no file outside them is opened). Hits are reported with file and line, never edited without a yes.
+
 ## §Contradictions (whole graph, tiered)
 
 Lint for meaning: contradictions, and claims superseded by newer ones. `km` reads only files it touches, so this is the only graph-wide check.

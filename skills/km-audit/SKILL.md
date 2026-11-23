@@ -15,7 +15,7 @@ Audits and improves the graph, skills and tools. Mechanics: `REF` = `${CLAUDE_PL
 
 **Run mode:** on demand only. No Plan Mode (overrides any CLAUDE.md plan-mode rule). Structural fixes are applied without waiting; everything else waits for OWNER's approval of the plan (Step 7).
 
-**Size budget:** this file ≤ 11 KiB.
+**Size budget:** this file ≤ 14 KB.
 
 ---
 
@@ -30,6 +30,8 @@ In parallel:
 6. `MEM/build_backlog.md` (open rows only), `SCOPE` (if set)
 
 Record **always-loaded bytes** (item 4 plus the session's whole skills listing, plugin and built-in included) as the efficiency baseline.
+
+**Stale-name check:** if a skill or command was renamed since the previous run (plugin or `<root>/commands`/`skills` list vs `runs.md`/Step 1 usage), search the CLAUDE.md files from item 4 for the old name, and check each path they name exists on disk. Flag each hit as stale, with file and line. Report only; editing CLAUDE.md needs OWNER's yes (Step 7).
 
 Pre-load `AskUserQuestion` via `ToolSearch` (not in a session started from another session, Step 5).
 
@@ -107,6 +109,8 @@ Evidence rules:
 - `compactable` is checked one slug at a time. Re-check the whole drop set together (§Triage) before proposing it.
 - First generate a query for every affected slug that has none (§Probe, compaction step 0). A drop is valid only if its replay still passes after the change.
 - Report bytes saved against target. Never compact MEMORY.md outside this step.
+- **Truncation outranks the byte target.** If Step 1 listed any `truncated` receipt, an index being cut at load silently disables rules: make it the first finding, urgent, ahead of every other fix and of the 17,000-byte target, even if the index is under target.
+- **Restructure index into theme hubs** (`REF` §Restructure). Use it when drop candidates are too few, fail replay, or truncation persists. Run `python -X utf8 -I "${CLAUDE_PLUGIN_ROOT}/scripts/km_index_restructure.py" propose --mem "${user_config.memory_path}" --out <scratchpad>/restructure`: it groups the feedback index lines into a few hub files, keeping each one-line description verbatim, and builds a query per moved slug. Run the LLM retrieval replay on those queries (Step 3). Any pass→fail, lost description or lost slug blocks the change. Never auto-applied: show the grouping, bytes saved and replay report in the plan; write only after OWNER's yes, with `apply ... --owner-approved`.
 
 Also:
 - Graph health link batch (cap 15–20 files, remainder logged)
@@ -150,7 +154,7 @@ Context-confound check: <passed / failed → probes skipped>
 - **Revision** → edit the plan with track-changes markup and re-surface it.
 - **"cancel"** → keep the plan; still write eval state (new `cases.jsonl` rows, `runs.md` line).
 
-**Apply-rules:** structural fixes are auto-applied in Step 6, before the plan, and listed in it as *applied* (revert = `git revert` that commit): dead/missing links, index lines whose drop keeps reachability and passes retrieval replay, stale paths verified on disk, frontmatter tags. Anything that changes what a rule says (merge, trim, rewrite), retirements, new hooks or scripts, and CLAUDE.md edits need OWNER's yes.
+**Apply-rules:** structural fixes are auto-applied in Step 6, before the plan, and listed in it as *applied* (revert = `git revert` that commit): dead/missing links, index lines whose drop keeps reachability and passes retrieval replay, stale paths verified on disk, frontmatter tags. Anything that changes what a rule says (merge, trim, rewrite), a theme-hub restructure, retirements, new hooks or scripts, and CLAUDE.md edits need OWNER's yes.
 
 ## Step 8 — Execute
 
