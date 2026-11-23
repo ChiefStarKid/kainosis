@@ -1,0 +1,8 @@
+{"mode": "full",
+ "candidates": [
+  {"id": 1, "disposition": "written", "where": "feedback_confirm_bulk_delete.md", "verified": true, "evidence": "file exists; GRAPH --reachable ok"},
+  {"id": 2, "disposition": "merged", "where": "feedback_reply_all.md", "verified": false, "evidence": null},
+  {"id": 3, "disposition": "deferred", "where": "build_backlog.md row 4", "verified": true, "evidence": "row present"}],
+ "reverse_sweep": {"ran": true, "turns": 41, "unreconciled": []},
+ "loose_ends": [],
+ "carry_over": [{"item": "pasted path", "where": "build_backlog.md row 4"}]}
