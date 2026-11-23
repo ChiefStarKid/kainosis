@@ -81,11 +81,13 @@ A rule that keeps failing as soft text in memory (the `km-audit` flow: "Soft rul
 
 3. Tell `km lean`, in that conversation, that you run the hook. It cannot detect it, and without your statement it writes no file. It then also writes the Keep text to the temp file and still prints the paste-ready last line.
 
+**Tip: queue the compact.** After you send `/kainosis:km lean`, you can type `/compact` straight away while it is still running. It queues and runs once `km lean` has finished and its questions are answered (tested 2026-11-23: the questions came first, and the Keep list carried through). One bare `/compact` then does the whole hand-off.
+
 The empty matcher also fires on auto-compaction. That is why the file is one-shot and expires: if you run `km lean` and do not compact, an auto-compaction within 30 minutes would use that list.
 
 ## What it reads and writes
 
 - **Reads:** the hook input on stdin, and `<temp dir>/claude/km-keep.txt` (`KM_KEEP_FILE` overrides the path).
-- **Writes:** the file's text to stdout (at most 9,000 characters). It deletes the keep file. Nothing else.
+- **Writes:** the file's text to stdout (at most 9,000 characters). It deletes the keep file and appends one line per run (time, session id, `manual` or `auto`, what it did; never the Keep text) to `km-keep-hook.log` in the same folder. Delete that log any time. Nothing else.
 - **Network:** none.
 - `km lean` itself writes that one temp file, only on your say-so.
