@@ -9,7 +9,7 @@ argument-hint: "[lean]"
 End-of-session KM. Confirm via Q&A, then write directly. No plan gate.
 
 - `km`: full run.
-- `km lean` (alias `pre-compact`): offload before `/compact`. Durable content goes to the graph, corrections become eval cases, and the run ends with a ready-to-paste `/compact Keep:` line for the rest. Skips Round 3, Round 4, Behaviour A and the Step 6 summary.
+- `km lean` (alias `pre-compact`): offload before `/compact`. Durable content goes to the graph, corrections become eval cases, and the run ends with a ready-to-paste `/compact Keep:` line for the rest. Skips Round 3, Round 4, Behaviour A and the Step 6 summary. Its verdict can only be `SAFE TO COMPACT`, never `SAFE` (Step 9).
 
 Design constraint: context efficiency first. Memory content standard: `SCHEMA`. Size budget for this file: target ≤18,000 bytes, hard ceiling 20,000 (`wc -c`).
 
@@ -18,6 +18,7 @@ Design constraint: context efficiency first. Memory content standard: `SCHEMA`. 
 - `MEM` = `${user_config.memory_path}`.
 - `GRAPH` = `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_graph_check.py" --mem "${user_config.memory_path}"`. Read-only; shared with km-audit.
 - `SCHEMA` = `${CLAUDE_PLUGIN_ROOT}/docs/schema.md` (frontmatter A1, description A3, body A4, graph metrics A5, sources A6). Read only the § you need.
+- `VERDICT` = `${CLAUDE_PLUGIN_ROOT}/docs/closeout-verdict.md` (ledger format, verdict rules, worked example). Read before Step 3b and Step 9.
 - `SCOPE` = `${user_config.scope_rule_file}` (may be empty: then everything in `MEM` is in scope).
 - `MEM/eval/` holds `cases.jsonl` and `retrieval.jsonl`. Never index it in MEMORY.md; never `[[ ]]`-link it.
 
@@ -63,6 +64,12 @@ Review the entire conversation.
 - `check`: a machine-checkable condition (e.g. "no `send` command with a new subject line"), else `null`. Never model-graded.
 
 **Targeted reads.** For each `graph` candidate, find overlapping files from MEMORY.md lines plus a `Grep` of `MEM` (top level) for its key terms. Read only those. Full run only: also read the files you will name as Round 4 discard candidates. Source those from `GRAPH` signals (unreachable, dead links), contradictions seen in this conversation, supersession by CLAUDE.md, and log.md recency. Never from a full read.
+
+## Step 3b — Reverse sweep (full only)
+
+Re-read the conversation once more, last turn to first, for anything that matters and is not yet a candidate, loose end or carry-over item (a decision, path, pending action, correction). Add each find as a candidate or carry-over item. Report "re-read N turns, M finds".
+
+**Zero-candidate checkpoint (full only).** With no candidates and no case after Step 3 and 3b, ask via `AskUserQuestion`: **Verdict only (Recommended)** or **Full run**. Verdict only skips Steps 4–8; it runs the loose-ends sweep, then Step 9. The owner picks the run.
 
 ## Step 4 — Q&A
 
@@ -178,13 +185,23 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
     Keep it short: names and decisions, not prose. With no `thread` items, the last line is `/compact`.
     Claude Code cannot run `/compact` from a skill or hook, so OWNER always types or pastes it. Optional, and only when OWNER has said in this conversation that they run the opt-in PreCompact hook (`hooks/README.md`; you cannot detect it, so never assume it): also write the Keep text (the part after `/compact `, i.e. `Keep: ...`) to `<temp dir>/claude/km-keep.txt` (`%TEMP%` on Windows, `$TMPDIR` or `/tmp` elsewhere), overwriting any old file. Then add before the last line: "Or type a bare `/compact`: the hook feeds the Keep list in." Without OWNER's statement, write no file (a stray file would feed a later auto-compaction), and never skip the paste-ready last line.
 
+## Step 9 — Close-out verdict
+
+Runs after Step 8, so it can verify what Step 8 wrote. Rules and formats: `VERDICT`. Show in chat, write nothing.
+
+1. **Disposition ledger (full and lean).** Every candidate, case and Round 3/4 item gets one disposition: `written`, `merged`, `rejected` or `deferred` (with where it lives). Lean: candidates only.
+2. **Loose-ends sweep (full only).** Outside memory: unsent drafts, files outside `MEM`, uncommitted or unpushed work, running or background tasks, a failed commit or push. Each is `clear`, `tracked` (where) or `open`.
+3. **Carry-over list (full only).** What the next session must pick up and lives only in this thread: `what — where it lives now`. No home outside the thread = `unanchored`.
+4. **Verify, then verdict.** Check each claim the verdict rests on with one read-only call (file exists, ref pushed, process gone). **Never issue SAFE on an unverified claim.** Full: `SAFE` only if the ledger is complete, the reverse sweep ran with every find reconciled, no loose end is open, nothing is unanchored and no claim is unverified; else `NOT SAFE — <blocker + action that clears it>`. OWNER may accept a blocker; Claude never does. Lean: `SAFE TO COMPACT` or `NOT SAFE TO COMPACT`, stating that the sweeps were not run; never `SAFE`, because lean skips the sweeps and its Keep line is thread-only content.
+5. Only SAFE sessions are archive/delete candidates (session grooming). On NOT SAFE print "KM close-out written — thread NOT yet safe to close" instead of the "complete" line.
+
 ## Error handling
 
 | Case | Handling |
 |---|---|
 | MEMORY.md missing | Create it with the standard header; index the files written |
 | No memory files | CREATE-only; skip A, B, D |
-| Nothing KM-worthy | All operations "None"; still record cases; a full run still reports C and F |
+| Nothing KM-worthy | Zero-candidate checkpoint (Step 3b); else all operations "None", cases still recorded, a full run still reports C and F |
 | DELETE with weak evidence | Downgrade to an UPDATE with a staleness note; never DELETE on weak evidence |
 | Compacted mid-run | Restart from Step 1 |
 | `GRAPH` fails | Report the error; skip the C, F and H numbers rather than reading every file |
