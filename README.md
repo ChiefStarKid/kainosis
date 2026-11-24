@@ -39,7 +39,7 @@ The original pattern fits well when you own your sources, run a frontier model a
 
 ## What is different
 
-1. **A behaviour layer, not only a knowledge base.** Corrections become eval cases (`eval/cases.jsonl`). Rules are re-tested per model and retired when the model no longer needs them. Karpathy's wiki is a library the agent maintains; this is the agent's own training layer, kept outside the weights.
+1. **A behaviour layer, not only a knowledge base.** Corrections become eval cases (`eval/cases.jsonl`). Rules are re-tested per model and retired when the model no longer needs them. A rule earns no credit when the model behaves correctly without it: a model that refuses a risky action on its own is not the rule working. Each probe runs with and without the rule's text to tell the two apart. Karpathy's wiki is a library the agent maintains; this is the agent's own training layer, kept outside the weights.
 2. **A hub-and-spoke graph sized to a context budget, not a flat index.** `MEMORY.md` points to hubs; each hub's `**Cluster:**` line points to its spokes. Nodes are typed (feedback, project, reference, user). `scripts/km_graph_check.py` measures reachability, hops and the bytes read along each path. A flat index grows with every page; hub-and-spoke grows with the number of hubs.
 3. **Sources by reference, freshness by use.** The graph stores where a source is and what it holds. It never copies or reorganises the source.
 
