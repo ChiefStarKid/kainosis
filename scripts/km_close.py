@@ -4,8 +4,14 @@ never uses the network: the commit, the push and the final output stay in the sk
 
 Usage:  python km_close.py --mem DIR --input FILE [--dry-run]
 
-Everything is validated first; on any error nothing is written and the exit code
-is 2. Existing line endings are kept (CRLF files stay CRLF; new files use LF).
+Everything is validated first and every target is written to a temp file before any
+is renamed into place, so on bad input or an unwritable file nothing is written and
+the exit code is 2. Existing text is never rewritten: each line keeps its own line
+ending (CRLF stays CRLF, mixed stays mixed), a file without a final newline gets
+none, a UTF-8 BOM is kept; new files use LF. A file that is not UTF-8 is refused.
+The input file must be outside --mem (so a commit of the memory can never stage it).
+Every file written is printed as a line `file: <path relative to --mem>`; stage
+exactly those paths, never `git add .`.
 
 Input: one JSON object.
   session   string. Defaults to $CLAUDE_CODE_SESSION_ID; one of the two is required.
@@ -32,8 +38,8 @@ Input: one JSON object.
   backlog_links  list of slugs for that **Related:** line (only used when the file is
             created; required then, so the new file is not an island).
 
-The log line `date | topic | N creates, N updates, N deletes, N cases[, lean]` goes at the
-end of log.md, under its `---` separator (a log.md without one gets the separator first).
+The log line `date | topic | N creates, N updates, N deletes, N cases[, lean]` is appended
+at the end of log.md (a missing log.md is created); no separator is ever added.
 N cases is the number of case lines written, not skipped.
 
 Exit: 0 done (skips are reported, not errors), 2 bad input or unwritable file.
@@ -55,27 +61,62 @@ TABLE_HEAD = ["| Date | Candidate | Session context | Status |", "|---|---|---|-
 
 
 class Bad(Exception):
-    pass
+    def __init__(self, msg, partial=False):
+        super().__init__(msg)
+        self.partial = partial
 
 
 def jline(obj):
     return json.dumps(obj, ensure_ascii=False)
 
 
-def read_lines(path):
-    if not path.exists():
-        return [], "\n", False
-    data = path.read_bytes()
-    if not data:
-        return [], "\n", True
-    text = data.decode("utf-8")
-    eol = "\r\n" if text.count("\r\n") * 2 > text.count("\n") else "\n"
-    text = text.replace("\r\n", "\n")
-    return (text[:-1] if text.endswith("\n") else text).split("\n"), eol, True
+class Doc:
+    """A text file as (content, terminator) lines; untouched lines keep their bytes."""
 
+    def __init__(self, path):
+        self.bom = ""
+        self.existed = path.exists()
+        text = ""
+        if self.existed:
+            try:
+                data = path.read_bytes()
+            except OSError as e:
+                raise Bad(f"cannot read {path}: {e}")
+            if data.startswith(b"\xef\xbb\xbf"):
+                self.bom, data = "﻿", data[3:]
+            try:
+                text = data.decode("utf-8")
+            except UnicodeDecodeError:
+                raise Bad(f"{path} is not valid UTF-8; fix or convert it first")
+        parts = text.split("\n")
+        self.lines = []
+        for i, p in enumerate(parts):
+            if i == len(parts) - 1:
+                if p:
+                    self.lines.append([p, ""])
+            elif p.endswith("\r"):
+                self.lines.append([p[:-1], "\r\n"])
+            else:
+                self.lines.append([p, "\n"])
+        crlf = sum(1 for ln in self.lines if ln[1] == "\r\n")
+        lf = sum(1 for ln in self.lines if ln[1] == "\n")
+        self.eol = "\r\n" if crlf > lf else "\n"
 
-def join_lines(lines, eol):
-    return (eol.join(lines) + eol).encode("utf-8")
+    def text(self):
+        return [ln[0] for ln in self.lines]
+
+    def insert(self, i, items):
+        new = [[s, self.eol] for s in items]
+        if new and i == len(self.lines) and self.lines and self.lines[-1][1] == "":
+            self.lines[-1][1] = self.eol  # old last line gets its newline; the new last stays bare
+            new[-1][1] = ""
+        self.lines[i:i] = new
+
+    def append(self, items):
+        self.insert(len(self.lines), items)
+
+    def data(self):
+        return (self.bom + "".join(c + t for c, t in self.lines)).encode("utf-8")
 
 
 def need_str(obj, key, where):
@@ -171,9 +212,9 @@ def cell(s):
 
 def plan_jsonl(path, new, same, label, out):
     """Append the entries of `new` not already present (by `same`). -> (bytes|None, wrote)"""
-    lines, eol, _ = read_lines(path)
+    doc = Doc(path)
     seen = []
-    for ln in lines:
+    for ln in doc.text():
         try:
             obj = json.loads(ln)
         except ValueError:
@@ -186,14 +227,15 @@ def plan_jsonl(path, new, same, label, out):
             out.append(f"skipped {label}: {e.get('rule') or e.get('query')!r} (already recorded this session)")
             continue
         seen.append(e)
-        lines.append(jline(e))
+        doc.append([jline(e)])
         out.append(f"wrote {label}: {e.get('rule') or e.get('query')!r}")
         wrote += 1
-    return (join_lines(lines, eol) if wrote else None), wrote
+    return (doc.data() if wrote else None), wrote
 
 
 def plan_backlog(path, v, out):
-    lines, eol, existed = read_lines(path)
+    doc = Doc(path)
+    lines = doc.text()
     rows = []
     for cand, ctx in v["backlog"]:
         row = f"| {v['day']} | {cell(cand)} | {cell(ctx)} | open |"
@@ -204,18 +246,21 @@ def plan_backlog(path, v, out):
             out.append(f"wrote backlog row: {cand!r}")
     if not rows:
         return None
-    if not existed or not lines:
+    if not doc.existed or not doc.lines:
         if not v["links"]:
             raise Bad("build_backlog.md is absent: 'backlog_links' (slugs it links out to) is required to create it")
-        lines = ["---", "name: build_backlog",
-                 "description: Open build and automation candidates from close-outs; read when choosing what to build next",
-                 "metadata:", "  node_type: memory", "  type: project", "---", "", "# Build backlog", "",
-                 BACKLOG_HEAD, "", *TABLE_HEAD, "", "**Related:** " + " · ".join(f"[[{s}]]" for s in v["links"])]
+        doc.eol = "\n"
+        doc.lines = []
+        doc.append(["---", "name: build_backlog",
+                    "description: Open build and automation candidates from close-outs; read when choosing what to build next",
+                    "metadata:", "  node_type: memory", "  type: project", "---", "", "# Build backlog", "",
+                    BACKLOG_HEAD, "", *TABLE_HEAD, "", "**Related:** " + " · ".join(f"[[{s}]]" for s in v["links"])])
         out.append("created build_backlog.md (index it in MEMORY.md or a hub)")
-        existed = False
+    lines = doc.text()
     h = next((i for i, ln in enumerate(lines) if ln.strip() == BACKLOG_HEAD), None)
     if h is None:
-        lines += ["", BACKLOG_HEAD, "", *TABLE_HEAD]
+        doc.append(["", BACKLOG_HEAD, "", *TABLE_HEAD])
+        lines = doc.text()
         h = len(lines) - 4
     end = h + 1
     while end < len(lines) and lines[end].strip() == "":
@@ -224,23 +269,49 @@ def plan_backlog(path, v, out):
     while end < len(lines) and lines[end].lstrip().startswith("|"):
         end += 1
     if end == start:  # heading without a table
-        lines[start:start] = [*TABLE_HEAD]
+        doc.insert(start, [*TABLE_HEAD])
         end = start + len(TABLE_HEAD)
-    lines[end:end] = rows
-    return join_lines(lines, eol)
+    doc.insert(end, rows)
+    return doc.data()
 
 
 def plan_log(path, v, wrote_cases, out):
-    lines, eol, _ = read_lines(path)
+    doc = Doc(path)
     entry = f"{v['day']} | {v['topic']} | {v['creates']} creates, {v['updates']} updates, {v['deletes']} deletes, {wrote_cases} cases"
     if v["lean"]:
         entry += ", lean"
-    if "---" not in [ln.strip() for ln in lines]:
-        lines.append("---")
-        out.append("log.md had no '---' separator: added one")
-    lines.append(entry)
+    doc.append([entry])
     out.append(f"wrote log line: {entry}")
-    return join_lines(lines, eol)
+    return doc.data()
+
+
+def write_tmp(tmp, data):
+    tmp.write_bytes(data)
+
+
+def commit(writes):
+    """Write every target to a temp file first, then rename each into place."""
+    tmps = []
+    p = None
+    try:
+        for p, data in writes:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            tmp = p.with_name(p.name + ".km_tmp")
+            tmps.append(tmp)
+            write_tmp(tmp, data)
+    except OSError as e:
+        for t in tmps:
+            t.unlink(missing_ok=True)
+        raise Bad(f"cannot write {p}: {e}")
+    done = []
+    for tmp, (p, _) in zip(tmps, writes):
+        try:
+            os.replace(tmp, p)
+        except OSError as e:
+            for t in tmps:
+                t.unlink(missing_ok=True)
+            raise Bad(f"cannot replace {p}: {e}; already updated: {', '.join(map(str, done)) or 'none'}", partial=True)
+        done.append(p)
 
 
 def main(argv=None):
@@ -255,10 +326,15 @@ def main(argv=None):
         mem = Path(a.mem)
         if not mem.is_dir():
             raise Bad(f"memory folder not found: {mem}")
+        inp = Path(a.input)
+        if inp.resolve().is_relative_to(mem.resolve()):
+            raise Bad("the input file must be outside the memory folder (keep it in the temp folder)")
         try:
-            raw = json.loads(Path(a.input).read_text(encoding="utf-8-sig"))
+            raw = json.loads(inp.read_text(encoding="utf-8-sig"))
         except OSError as e:
             raise Bad(f"cannot read input: {e}")
+        except UnicodeDecodeError:
+            raise Bad("input is not valid UTF-8")
         except ValueError as e:
             raise Bad(f"input is not valid JSON: {e}")
         v = validate(raw)
@@ -280,15 +356,11 @@ def main(argv=None):
                 writes.append((mem / "build_backlog.md", data))
         writes.append((mem / "log.md", plan_log(mem / "log.md", v, n_cases, out)))
         if not a.dry_run:
-            for p, data in writes:
-                try:
-                    p.parent.mkdir(parents=True, exist_ok=True)
-                    p.write_bytes(data)
-                except OSError as e:
-                    raise Bad(f"cannot write {p}: {e}")
+            commit(writes)
+        out += [f"{'would write ' if a.dry_run else ''}file: {p.relative_to(mem).as_posix()}" for p, _ in writes]
     except Bad as e:
         print(f"km_close: {e}", file=sys.stderr)
-        print("km_close: nothing written", file=sys.stderr)
+        print("km_close: some files were already updated" if e.partial else "km_close: nothing written", file=sys.stderr)
         return 2
     if a.dry_run:
         out.insert(0, "dry run: nothing written")
