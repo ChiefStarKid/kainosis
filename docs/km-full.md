@@ -14,7 +14,7 @@ Full run only: also read the files you will name as Round 4 discard candidates. 
 
 Re-read the conversation last turn to first for anything that matters and is not yet a candidate or carry-over item (decision, path, pending action, correction). Add each find. Report "re-read N turns, M finds".
 
-**Zero-candidate checkpoint.** With no candidate or case after Steps 3 and 3b, ask via `AskUserQuestion`: **Verdict only (Recommended)** or **Full run**. Verdict only skips Steps 4–8; it runs the loose-ends sweep, then Step 9. The owner picks the run.
+**Zero-candidate checkpoint** (trigger: the skill, Step 4). Ask via `AskUserQuestion`: **Verdict only (Recommended)** or **Full run**. Verdict only skips Steps 4–8; it runs the loose-ends sweep, then Step 9 (short form: `VERDICT`). Full run goes on with every operation "None", still records cases and still reports C and F. The owner picks the run.
 
 ## Step 4 — Rounds 3 and 4
 

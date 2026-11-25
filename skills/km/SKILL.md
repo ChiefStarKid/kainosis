@@ -18,6 +18,8 @@ Context efficiency first. Memory content standard: `SCHEMA`. Size budget for thi
 - `OWNER` = ${user_config.owner_name}, the person whose memory this is.
 - `MEM` = `${user_config.memory_path}`.
 - `GRAPH` = `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_graph_check.py" --mem "${user_config.memory_path}"`. Read-only; shared with km-audit.
+- `LINT` = `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_lint.py" --mem "${user_config.memory_path}"`. Report-only.
+- `COMMIT` = `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_commit.py" --mem "${user_config.memory_path}"`.
 - `SCHEMA` = `${CLAUDE_PLUGIN_ROOT}/docs/schema.md` (frontmatter A1, description A3, body A4, graph metrics A5, sources A6).
 - `VERDICT` = `${CLAUDE_PLUGIN_ROOT}/docs/closeout-verdict.md` (full-run formats and rules). Full run: read at Step 9. Lean never opens it.
 - `FULL` = `${CLAUDE_PLUGIN_ROOT}/docs/km-full.md`: the full-run-only steps. Full run: read at Step 1. Lean never opens it.
@@ -33,13 +35,13 @@ Context efficiency first. Memory content standard: `SCHEMA`. Size budget for thi
 
 `ToolSearch` with `select:AskUserQuestion`. If `SCOPE` is set, read it once; its rules apply to every step below (see Scope and structure rules).
 
-Full run: read `FULL` now, before Step 2. After a mid-run compaction, restart from Step 1 and re-read it. A full run that has not run `FULL`'s Step 3b, Rounds 3 and 4, Step 6 and Step 9 sweeps cannot reach `SAFE`.
+Full run: read `FULL` now, before Step 2. It holds every full-only step (3b, Rounds 3 and 4, Behaviour A, the full halves of C and F, Step 6, the Step 9 sweeps): apply each at its number. After a mid-run compaction, restart from Step 1 and re-read it. A run that skips any cannot reach `SAFE`.
 
 ## Step 2 — Index + script pass
 
 - MEMORY.md is already in context when `MEM` is the auto-memory dir. Don't re-read it then; otherwise read it once. Never read memory files wholesale.
-- Run `GRAPH`. Keep its summary for Behaviours C and F: MEMORY.md lines, density, islands, unreachable files, dead links, feedback missing Why/Trigger/basis.
-- If MEMORY.md is missing: CREATE-only mode; create it with the standard header in Step 8.
+- Run `GRAPH`; its first line is `preflight:`. `STOP (..)`: stop and tell OWNER (not set: `/plugin` → configure). `CREATE-ONLY (..)`: CREATE-only mode, skip A, B, D; create MEMORY.md with the standard header in Step 8 if missing. `DEGRADED (..)`: report the error, skip the C, F and H numbers rather than reading every file.
+- Keep its summary for Behaviours C and F: MEMORY.md lines, density, islands, unreachable files, dead links, feedback missing Why/Trigger/basis.
 
 ## Step 3 — Scan, route, targeted reads
 
@@ -68,11 +70,9 @@ Review the entire conversation.
 - `situation` and `expected`: one line each
 - `check`: `null`, or an object `{"type": T, ...}` with T one of `tool_call_absent`, `tool_call_present`, `arg_matches`, `file_unchanged` (fields in `docs/evals.md` §Files). Prose is rejected (exit 2). Never model-graded: no object fits → `null`.
 
-**Targeted reads.** For each `graph` candidate, find overlapping files from MEMORY.md lines plus a `Grep` of `MEM` (top level) for its key terms. Read only those. Full run: also read the Round 4 discard candidates (`FULL`).
+**Targeted reads.** For each `graph` candidate, find overlapping files from MEMORY.md lines plus a `Grep` of `MEM` (top level) for its key terms. Read only those.
 
-## Step 3b — Reverse sweep (full only)
-
-Per `FULL`: reverse sweep, then the zero-candidate checkpoint. Lean skips it, but with no candidates and no cases skips Rounds 1 and 2 (no filler options) and goes to the Keep line and Step 9.
+## Step 3b — Reverse sweep (full only, `FULL`)
 
 ## Step 4 — Q&A
 
@@ -80,7 +80,8 @@ Per `FULL`: reverse sweep, then the zero-candidate checkpoint. Lean skips it, bu
 
 - **Round 1 — Reuse.** "What from this session is worth keeping as a reusable rule or memory?" Plus "None of these".
 - **Round 2 — Correction.** What Claude got wrong, and any existing memory that caused it. "What needs correcting — Claude's behaviour this session, or an existing memory rule that led there?" Plus "Nothing to correct". Confirming an option tagged `→ case:` records that case.
-- **Rounds 3 (Workflow & Build) and 4 (Discard), full only:** per `FULL`.
+
+**Nothing to capture** (no candidate and no case; full: after 3b): skip Rounds 1 and 2, no filler options. Lean: go to the Keep line and Step 9. Full: the checkpoint in `FULL`.
 
 **Lean:** ask Rounds 1 and 2 together, in a single `AskUserQuestion` call.
 **Lean auto:** before the Round, read `AUTO_DOC` §Wiring and gate the edits; Rounds 1 and 2 then cover only what is held, plus cases.
@@ -89,21 +90,16 @@ Per `FULL`: reverse sweep, then the zero-candidate checkpoint. Lean skips it, bu
 
 Applied to confirmed candidates and to the files read in Step 3.
 
-- **A — Stale review (full only):** per `FULL`.
 - **B — Reinforcement.** If an existing file covers the candidate, UPDATE it; never CREATE an overlapping file. If a node must be replaced rather than edited, CREATE the new one with `supersedes: <old_slug>` in frontmatter (`SCHEMA` A1); leave the old file for OWNER to retire. UPDATE only when the firing adds real nuance to Why or How to apply. Never append "confirmed again" or tally lines: a clean follow writes nothing, a violation becomes a case. Any UPDATE to a feedback file that lacks `basis` adds it.
-- **C — MEMORY.md budget.** Line count from `GRAPH`. Full run: budget proposals per `FULL`. Lean run: report the count only. A new MEMORY.md line adds to always-loaded context: prefer linking the new file from its hub instead, and add an index line only with OWNER's yes.
-- **D — Completeness.** New and touched `feedback`/`project` files need `**Why:**` and `**How to apply:**`. New feedback files, and feedback files this run updates, need `metadata.basis`. Don't flag untouched files.
-- **E — Readability.** New and touched files meet `SCHEMA` A3/A4:
+- **C — MEMORY.md budget.** Line count from `GRAPH`. Lean run: report the count only. A new MEMORY.md line adds to always-loaded context: prefer linking the new file from its hub instead, and add an index line only with OWNER's yes.
+- **D — Completeness.** New and touched `feedback`/`project` files need Why, How to apply, Trigger; feedback needs `metadata.basis` (also when updated). `LINT` (Step 8) checks it; don't flag untouched files.
+- **E — Readability.** New and touched files meet `SCHEMA` A3/A4. `LINT` checks the fields and link line; you judge:
   - `description` is a retrieval signal, not a title
   - the body leads with the rule or fact
-  - a concrete `**Trigger:**`
-  - a one-line `**Why:**`
-  - no narrative prose
-  - a `**Related:**` or `**Cluster:**` link line
+  - a concrete `**Trigger:**`, a one-line `**Why:**`, no narrative prose
 
   Fix non-conforming text before writing it.
 - **F — Graph health.** From `GRAPH`; metric definitions in `SCHEMA` A5.
-  - Full run: report and fix per `FULL`.
   - Lean run: only the new files' links (Behaviour H).
   - Every CREATE adds an inbound `[[new_slug]]` to its hub or closest related file, as an UPDATE.
 - **G — Verification gate.** Check every new or changed assertion that one local read-only call can verify: a file or dir exists, a `[[slug]]` resolves, a script flag exists, a path is current.
@@ -111,14 +107,12 @@ Applied to confirmed candidates and to the files read in Step 3.
   - Fail → fix it to current reality or drop it. Never write the stale version.
   - Un-checkable (test results, findings, preferences, live-service state) → stamp `unverified <YYYY-MM-DD>`.
 
-  Only new or changed assertions; don't re-verify untouched lines.
+  Only new or changed assertions. `LINT` catches stale paths, dead links and old stamps afterwards.
 - **H — Retrievability.** Offloaded content must be findable again.
   1. Run `GRAPH --reachable <slug ...>` for every CREATE and for every file whose `description:` changed. Fix any `UNREACHABLE` by adding the hub link before finishing.
   2. For each CREATE, write one realistic cold-session query that should route to it. Recorded in Step 8; km-audit replays them, not this skill.
 
-## Step 6 — Summary (full only)
-
-Assemble the summary and CREATE drafts per `FULL`. Lean skips it.
+## Step 6 — Summary (full only, `FULL`)
 
 ## Step 7 — Proceed
 
@@ -130,20 +124,13 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
 2. CREATE → `MEM/<slug>.md`. UPDATE → edit with the confirmed changes. DELETE → confirmed files only; ask first if the evidence is weak.
 3. MEMORY.md, confirmed lines only (Behaviour C): add, update or remove entries in the matching section. Format: `- [Name](file.md) — one-line description`.
 4. Behaviour H: `GRAPH --reachable <slugs>`; fix any `UNREACHABLE`.
-5. Write the input JSON in the OS temp dir (`$TEMP`/`$TMPDIR`), never in `MEM`:
+5. `LINT <slug ...>` on every file created or updated; fix each finding and re-run. It only reports; a finding you judge intentional goes in the Step 9 ledger.
+6. Write the input JSON in the OS temp dir (`$TEMP`/`$TMPDIR`), never in `MEM`:
    `{"topic":"..","creates":N,"updates":N,"deletes":N,"lean":true,"cases":[{"rule":"slug","model":"id|unknown","situation":"..","expected":"..","check":{"type":"tool_call_absent","tool":"Bash","pattern":"<regex>"}|null,"kind":"correction|violation|re-explanation"}],"retrieval":[{"query":"..","expected":"slug"}]}`.
    Full run: drop `lean`; [BUILD] rows go in `"backlog":[{"candidate":"..","context":".."}]` (if `build_backlog.md` is absent add `"backlog_links":[slugs]` and index the new file). Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_close.py" --mem "<MEM>" --input <json>`: it prints a `file: <path>` line per file written. Non-zero exit: report the error, never hand-write these appends.
-6. If `MEM` is inside a git repo, commit so every close-out is a revertable commit:
-   - `git -C "<MEM>" add -- <paths>`: only paths this run wrote (steps 2-3, deletions too, and step 5's `file:` lines, relative to `MEM`). Never `add .` or `-A`: other sessions' work may sit in the repo.
-   - `git -C "<MEM>" commit -m "chore(km): KM close-out YYYY-MM-DD — <topic>"` (skip if nothing is staged)
-   - Push only if `SCOPE` says to, to the branch it names; OWNER's instruction in this conversation overrides `SCOPE`. Never force-push; never push to the default branch unless `SCOPE` or OWNER says so. If the push fails, report it.
-7. Output:
-    ```
-    KM close-out complete.
-    Written: <files created/updated/deleted>
-    Cases: N | Retrieval queries: N | MEMORY.md: N lines
-    Committed: <hash> / skipped (nothing to commit / not a git repo) | Pushed: <branch> / no
-    ```
+7. The last call that writes: `COMMIT --input <json> -- <paths>`, so every close-out is a revertable commit. Paths: only files this run wrote or deleted (steps 2-3 and step 6's `file:` lines), relative to `MEM`. It refuses `.`, globs and directories, commits only those paths (other sessions' work in the repo stays out), never pushes, and prints the closing block with `Committed: <hash> | skipped (..) | FAILED: ..` and a last line `commit: <hash>|null`. A git failure exits 1: report it; never retry with `add .`.
+8. Push only if `SCOPE` says to, to the branch it names; OWNER's instruction in this conversation overrides `SCOPE`. Never force-push; never push to the default branch unless `SCOPE` or OWNER says so. If the push fails, report it.
+9. Output the block `COMMIT` printed, with `Pushed:` set to the branch if you pushed, or to `FAILED` if the push failed.
     **Lean:** add `Carry list:` (one short bullet per `thread` item). Make the **last line** of the message ready to paste:
     `/compact Keep: <item>; <item>; ...`
     Keep it short: names and decisions. With no `thread` items, the last line is `/compact`.
@@ -163,12 +150,8 @@ After Step 8, so it can verify what was written. Chat only; write nothing to `ME
 
 | Case | Handling |
 |---|---|
-| No memory files | CREATE-only; skip A, B, D |
-| Nothing KM-worthy | Full: zero-candidate checkpoint (`FULL`). Lean: skip Rounds 1 and 2, go to the Keep line and verdict. Else all operations "None", cases still recorded, a full run still reports C and F |
 | DELETE with weak evidence | Downgrade to an UPDATE with a staleness note; never DELETE on weak evidence |
 | Compacted mid-run | Restart from Step 1 |
-| `GRAPH` fails | Report the error; skip the C, F and H numbers rather than reading every file |
-| `memory_path` not set | Stop; ask OWNER to set it (`/plugin` → configure) |
 
 ## Key rules
 

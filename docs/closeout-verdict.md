@@ -35,7 +35,7 @@ SAFE means safe to archive, delete or compact. NOT SAFE prints "KM close-out wri
 
 ## Zero-candidate checkpoint
 
-If the forward scan and the reverse sweep produce no candidates and no case, `AskUserQuestion` before Step 4: **Verdict only (Recommended)** or **Full run**. Verdict only skips the Q&A rounds, the Behaviours and the Step 6 summary; it still runs the reverse sweep and the loose-ends sweep (they back the verdict), and prints the short form:
+The question and its trigger are in `FULL` and the skill (Step 4). Verdict only skips the Q&A rounds, the Behaviours and the Step 6 summary; it still runs the reverse sweep and the loose-ends sweep (they back the verdict), and prints the short form:
 
 ```
 Disposition ledger: none (zero candidates)
