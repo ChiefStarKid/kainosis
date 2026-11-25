@@ -20,6 +20,7 @@ Context efficiency first. Memory content standard: `SCHEMA`. Size budget for thi
 - `GRAPH` = `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_graph_check.py" --mem "${user_config.memory_path}"`. Read-only; shared with km-audit.
 - `SCHEMA` = `${CLAUDE_PLUGIN_ROOT}/docs/schema.md` (frontmatter A1, description A3, body A4, graph metrics A5, sources A6).
 - `VERDICT` = `${CLAUDE_PLUGIN_ROOT}/docs/closeout-verdict.md` (ledger, verdict rules, example). Read before Step 9.
+- `FULL` = `${CLAUDE_PLUGIN_ROOT}/docs/km-full.md`: the full-run-only steps. Full run: read at Step 1. Lean never opens it.
 - `AUTO_DOC` = `${CLAUDE_PLUGIN_ROOT}/docs/auto-km-lean.md` (§Wiring); the gate is `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_auto_gate.py"`.
 - `SCOPE` = `${user_config.scope_rule_file}` (may be empty: then everything in `MEM` is in scope).
 - `MEM/eval/` holds `cases.jsonl` and `retrieval.jsonl`. Never index it in MEMORY.md; never `[[ ]]`-link it.
@@ -31,6 +32,8 @@ Context efficiency first. Memory content standard: `SCHEMA`. Size budget for thi
 ## Step 1 — Load tools and scope
 
 `ToolSearch` with `select:AskUserQuestion`. If `SCOPE` is set, read it once; its rules apply to every step below (see Scope and structure rules).
+
+Full run: read `FULL` now, before Step 2. After a mid-run compaction, restart from Step 1 and re-read it. A full run that has not run `FULL`'s Step 3b, Rounds 3 and 4, Step 6 and Step 9 sweeps cannot reach `SAFE`.
 
 ## Step 2 — Index + script pass
 
@@ -65,13 +68,11 @@ Review the entire conversation.
 - `situation` and `expected`: one line each
 - `check`: a machine-checkable condition (e.g. "no `send` command with a new subject line"), else `null`. Never model-graded.
 
-**Targeted reads.** For each `graph` candidate, find overlapping files from MEMORY.md lines plus a `Grep` of `MEM` (top level) for its key terms. Read only those. Full run only: also read the files you will name as Round 4 discard candidates. Source those from `GRAPH` signals (unreachable, dead links), contradictions seen in this conversation, supersession by CLAUDE.md, and log.md recency. Never a full read.
+**Targeted reads.** For each `graph` candidate, find overlapping files from MEMORY.md lines plus a `Grep` of `MEM` (top level) for its key terms. Read only those. Full run: also read the Round 4 discard candidates (`FULL`).
 
 ## Step 3b — Reverse sweep (full only)
 
-Re-read the conversation last turn to first for anything that matters and is not yet a candidate or carry-over item (decision, path, pending action, correction). Add each find. Report "re-read N turns, M finds".
-
-**Zero-candidate checkpoint (full only).** With no candidate or case after Steps 3 and 3b, ask via `AskUserQuestion`: **Verdict only (Recommended)** or **Full run**. Verdict only skips Steps 4–8; it runs the loose-ends sweep, then Step 9. The owner picks the run.
+Per `FULL`: reverse sweep, then the zero-candidate checkpoint. Lean skips it.
 
 ## Step 4 — Q&A
 
@@ -79,8 +80,7 @@ Re-read the conversation last turn to first for anything that matters and is not
 
 - **Round 1 — Reuse.** "What from this session is worth keeping as a reusable rule or memory?" Plus "None of these".
 - **Round 2 — Correction.** What Claude got wrong, and any existing memory that caused it. "What needs correcting — Claude's behaviour this session, or an existing memory rule that led there?" Plus "Nothing to correct". Confirming an option tagged `→ case:` records that case.
-- **Round 3 — Workflow & Build (full only).** Changes to how future sessions run (skills, scripts, commands, config, triggers), and items worth building or automating, prefixed **[BUILD]**. Plus "No workflow changes needed". Workflow items are flagged in the summary, not executed. [BUILD] items go to `build_backlog.md` in Step 8.
-- **Round 4 — Discard (full only).** "Which of these memory files should be deleted or retired?" One option per candidate with a one-line reason. Plus "Keep everything".
+- **Rounds 3 (Workflow & Build) and 4 (Discard), full only:** per `FULL`.
 
 **Lean:** ask Rounds 1 and 2 together, in a single `AskUserQuestion` call.
 **Lean auto:** before the Round, read `AUTO_DOC` §Wiring and gate the edits; Rounds 1 and 2 then cover only what is held, plus cases.
@@ -89,15 +89,9 @@ Re-read the conversation last turn to first for anything that matters and is not
 
 Applied to confirmed candidates and to the files read in Step 3.
 
-- **A — Stale review (full only).** On files read this run:
-  - `project`: stale if concluded or superseded
-  - `reference`: stale if a path or URL is no longer current
-  - `feedback`: only if explicitly contradicted this session
-  - `user`: only if directly contradicted
-
-  Propose UPDATE or DELETE. The repo-wide stale sweep belongs to km-audit.
+- **A — Stale review (full only):** per `FULL`.
 - **B — Reinforcement.** If an existing file covers the candidate, UPDATE it; never CREATE an overlapping file. If a node must be replaced rather than edited, CREATE the new one with `supersedes: <old_slug>` in frontmatter (`SCHEMA` A1); leave the old file for OWNER to retire. UPDATE only when the firing adds real nuance to Why or How to apply. Never append "confirmed again" or tally lines: a clean follow writes nothing, a violation becomes a case. Any UPDATE to a feedback file that lacks `basis` adds it.
-- **C — MEMORY.md budget.** Line count from `GRAPH`. Full run: at ≥170 lines, propose merges or trims from the index lines already in context. Lean run: report the count only. A new MEMORY.md line adds to always-loaded context: prefer linking the new file from its hub instead, and add an index line only with OWNER's yes.
+- **C — MEMORY.md budget.** Line count from `GRAPH`. Full run: budget proposals per `FULL`. Lean run: report the count only. A new MEMORY.md line adds to always-loaded context: prefer linking the new file from its hub instead, and add an index line only with OWNER's yes.
 - **D — Completeness.** New and touched `feedback`/`project` files need `**Why:**` and `**How to apply:**`. New feedback files, and feedback files this run updates, need `metadata.basis`. Don't flag untouched files.
 - **E — Readability.** New and touched files meet `SCHEMA` A3/A4:
   - `description` is a retrieval signal, not a title
@@ -109,7 +103,7 @@ Applied to confirmed candidates and to the files read in Step 3.
 
   Fix non-conforming text before writing it.
 - **F — Graph health.** From `GRAPH`; metric definitions in `SCHEMA` A5.
-  - Full run: report density, islands, unreachable files and dead links, and propose a fix for each, reading only the files involved.
+  - Full run: report and fix per `FULL`.
   - Lean run: only the new files' links (Behaviour H).
   - Every CREATE adds an inbound `[[new_slug]]` to its hub or closest related file, as an UPDATE.
 - **G — Verification gate.** Check every new or changed assertion that one local read-only call can verify: a file or dir exists, a `[[slug]]` resolves, a script flag exists, a path is current.
@@ -124,35 +118,7 @@ Applied to confirmed candidates and to the files read in Step 3.
 
 ## Step 6 — Summary (full only)
 
-Assemble this; write it to a file only if a DELETE is ambiguous or OWNER asks.
-- Summary (1–3 sentences)
-- CREATE / UPDATE / DELETE tables (file, type or change or reason), or "None"
-- MEMORY.md line count and budget status
-- Why/basis completeness
-- Verification Gate (fact | file | check | result)
-- Graph Health (density, islands, unreachable, dead links)
-- Workflow Suggestions (flagged, not executed)
-- Build Backlog additions
-- Cases and retrieval queries recorded
-- Draft content for each CREATE, using:
-
-```
----
-name: <slug>
-description: <retrieval signal>
-metadata:
-  node_type: memory
-  type: feedback
-  basis: compensation
----
-**Related:** [[hub_slug]]
-
-<rule or fact first>
-
-**Trigger:** <concrete condition>
-**Why:** <one line>
-**How to apply:** <precise action>
-```
+Assemble the summary and CREATE drafts per `FULL`. Lean skips it.
 
 ## Step 7 — Proceed
 
@@ -186,7 +152,7 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
 After Step 8, so it can verify what was written. Rules and formats: `VERDICT`. Chat only; write nothing.
 
 1. **Ledger (full and lean).** Every candidate, case and Round 3/4 item: `written`, `merged`, `rejected` or `deferred` (where). Lean: candidates only.
-2. **Loose-ends sweep, carry-over list (full only).** Formats in `VERDICT`.
+2. **Loose-ends sweep, carry-over list (full only).** Per `FULL`; formats in `VERDICT`.
 3. **Verify, then verdict.** Check each claim with one read-only call. **Never issue SAFE on an unverified claim.** Full: `SAFE` or `NOT SAFE — <blocker + clearing action>`. OWNER may accept a blocker; Claude never does. Lean: `SAFE TO COMPACT` or `NOT SAFE TO COMPACT` (sweeps not run); never plain `SAFE`. `scripts/km_verdict_check.py` checks a ledger's consistency, not its truth.
 4. NOT SAFE: print "KM close-out written — thread NOT yet safe to close" instead of "complete". Only SAFE sessions are archive/delete candidates.
 
@@ -195,7 +161,7 @@ After Step 8, so it can verify what was written. Rules and formats: `VERDICT`. C
 | Case | Handling |
 |---|---|
 | No memory files | CREATE-only; skip A, B, D |
-| Nothing KM-worthy | Zero-candidate checkpoint (Step 3b); else all operations "None", cases still recorded, a full run still reports C and F |
+| Nothing KM-worthy | Zero-candidate checkpoint (`FULL`, Step 3b); else all operations "None", cases still recorded, a full run still reports C and F |
 | DELETE with weak evidence | Downgrade to an UPDATE with a staleness note; never DELETE on weak evidence |
 | Compacted mid-run | Restart from Step 1 |
 | `GRAPH` fails | Report the error; skip the C, F and H numbers rather than reading every file |
