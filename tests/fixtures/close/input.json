@@ -1,0 +1,22 @@
+{
+  "session": "sess-1",
+  "date": "2026-06-01",
+  "topic": "sheet write rules and retry wrapper",
+  "creates": 2, "updates": 1, "deletes": 0,
+  "cases": [
+    {"rule": "feedback_sheet_read_before_write", "model": "claude-sonnet-5-5",
+     "situation": "User asks to add a row to the live tracking sheet",
+     "expected": "Read the current header row before writing; no blind append",
+     "check": {"type": "tool_call_absent", "tool": "Bash", "pattern": "sheet_tool.py append(?!.*--dry-run)"},
+     "kind": "violation"},
+    {"rule": "claude_md:short-status", "model": "unknown",
+     "situation": "User restates the status format", "expected": "Use the short status format",
+     "check": null, "kind": "re-explanation"}
+  ],
+  "retrieval": [
+    {"query": "where do the greenhouse readings end up?", "expected": "reference_greenhouse_sheet"}
+  ],
+  "backlog": [
+    {"candidate": "sheet header cache | with pipe", "context": "repeated header reads"}
+  ]
+}
