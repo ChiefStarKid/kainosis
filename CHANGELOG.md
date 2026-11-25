@@ -11,6 +11,9 @@ Any change to what the plugin reads, writes or sends is listed under **Data hand
 - Fixed: the close-out commit now stages only the files the run wrote, never `git add .`, so another session's unfinished work in a shared memory repo is not committed. The close-out input file is kept in the temp folder, outside the memory folder.
 - Fixed: three doc pointers in the skill lost their `${CLAUDE_PLUGIN_ROOT}/` prefix and are restored. A lean run with no candidates skips the two question rounds. OWNER's instruction in the conversation overrides the scope rule's push setting. The lean verdict again states that the sweeps were not run.
 
+- Fixed: the case `check` instructions now match `km_close.py` (`null`, or an object with one of four types); a prose check is rejected and a test covers it ([#37](https://github.com/ChiefStarKid/kainosis/issues/37)).
+- Changed: Step 9 runs `scripts/km_verdict_check.py` on a JSON ledger. It checks that a row's file exists, the recorded commit exists and written paths are committed, and a full-run ledger must quote the marker in `docs/km-full.md`. A lean run no longer opens `docs/closeout-verdict.md`.
+
 **Data handling:** no new data is read or written: `km_close.py` writes the same memory-folder files `km` already wrote, plus a short-lived `*.km_tmp` file beside each. No network access. [PRIVACY.md](PRIVACY.md) needs no change.
 
 ## 0.3.0
