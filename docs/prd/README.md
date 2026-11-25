@@ -19,3 +19,4 @@ One PRD per roadmap issue. The issue is the system of record; these say what and
 | [#13](https://github.com/ChiefStarKid/kainosis/issues/13) | [Root-led close-out for multi-session work](13-root-led-closeout.md) | Later |
 | [#17](https://github.com/ChiefStarKid/kainosis/issues/17) | [Source and added tags per memory node](17-source-and-added-tags.md) | Later |
 | [#18](https://github.com/ChiefStarKid/kainosis/issues/18) | [Last-used report per memory file and skill (report only)](18-last-used-report.md) | Later |
+| [#34](https://github.com/ChiefStarKid/kainosis/issues/34) | [Parent-triggered km verdict and lean, with a readable result](34-parent-triggered-km.md) | Next |
