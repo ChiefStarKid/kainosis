@@ -4,17 +4,23 @@ Versions follow `plugin.json`. Installed copies update only when the version is 
 
 Any change to what the plugin reads, writes or sends is listed under **Data handling** in its release, and [PRIVACY.md](PRIVACY.md) is updated in the same release.
 
-## Unreleased
+## 0.4.0
 
+- Added: `km lean auto` ([#23](https://github.com/ChiefStarKid/kainosis/issues/23), first slice). A lean run where edits that pass a gate are written without a question and everything else is asked as usual; the word `auto` in the command is the opt-in, needed every run, and plain `km lean` never writes unasked. `scripts/km_auto_gate.py` decides APPLY or HOLD for each proposed edit: only new files, appended or inserted lines and one-line fact fixes; a stored retrieval query must still reach its note; `MEMORY.md` and frontmatter are never touched; rule files about sending, deleting or publishing, weakening wording, text that did not come from your own words and edits over 1,500 characters are always held. Each run writes a digest with one revert command per edit. Details in `docs/auto-km-lean.md`.
+- Added: CI ([#21](https://github.com/ChiefStarKid/kainosis/issues/21)): on every push the plugin is validated, the skill front matter and a 20,000-byte size ceiling are checked, the graph check runs on the example graph and every test in `tests/` runs. The test files moved from `scripts/` to `tests/`.
+- Known limit: `km lean auto` has had no live run yet; its hit rate needs a few real close-outs. The gate's word lists for sending and weakening wording are best-effort, and the `source` label on an edit is set by whatever builds the edit list.
 - Changed: `skills/km/SKILL.md` is smaller, 18,261 to about 14,600 bytes committed ([#30](https://github.com/ChiefStarKid/kainosis/issues/30)). Steps only a full run performs moved to `docs/km-full.md` (read at Step 1 of a full run, never by `km lean`); the structure rules that apply only when creating wiki or per-tool files are in `docs/structure-rules.md`.
 - Added: `scripts/km_close.py`, which writes the mechanical Step 8 appends (cases, retrieval queries, backlog rows, log line) so the model no longer does it by hand. It validates everything first, writes through temp files, keeps each file's line endings, final newline and BOM, refuses non-UTF-8 files, never adds a separator to `log.md`, and prints the paths it wrote.
 - Fixed: the close-out commit now stages only the files the run wrote, never `git add .`, so another session's unfinished work in a shared memory repo is not committed. The close-out input file is kept in the temp folder, outside the memory folder.
 - Fixed: three doc pointers in the skill lost their `${CLAUDE_PLUGIN_ROOT}/` prefix and are restored. A lean run with no candidates skips the two question rounds. OWNER's instruction in the conversation overrides the scope rule's push setting. The lean verdict again states that the sweeps were not run.
-
 - Fixed: the case `check` instructions now match `km_close.py` (`null`, or an object with one of four types); a prose check is rejected and a test covers it ([#37](https://github.com/ChiefStarKid/kainosis/issues/37)).
 - Changed: Step 9 runs `scripts/km_verdict_check.py` on a JSON ledger. It checks that a row's file exists, the recorded commit exists and written paths are committed, and a full-run ledger must quote the marker in `docs/km-full.md`. A lean run no longer opens `docs/closeout-verdict.md`.
 
-**Data handling:** no new data is read or written: `km_close.py` writes the same memory-folder files `km` already wrote, plus a short-lived `*.km_tmp` file beside each. No network access. [PRIVACY.md](PRIVACY.md) needs no change.
+**Data handling:**
+- `km_close.py` writes the same memory-folder files `km` already wrote, plus a short-lived `*.km_tmp` file beside each; its input file is kept in the temp folder, outside the memory folder. The close-out commit stages only the files the run wrote.
+- Step 9 runs `km_verdict_check.py`, which makes read-only local checks (a file exists, a commit exists, written paths are committed).
+- `km lean auto`: `km_auto_gate.py` writes memory files without asking, only when you run `km lean auto` or pass `--opt-in` yourself. It writes new notes, appended or inserted lines and one-line fact fixes in your memory folder, and a run folder under `eval/auto_runs/`. It never edits `MEMORY.md`, never runs git, never pushes, and makes no network request. Text from tool results is never written automatically. [PRIVACY.md](PRIVACY.md) is updated.
+- No network access in any of the above.
 
 ## 0.3.0
 
