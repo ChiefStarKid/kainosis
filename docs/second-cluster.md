@@ -24,11 +24,11 @@ The first cluster was general working habits (git, shell, permissions, time zone
 | R3 document status | 5/5 | 5/5 | pass | no exposure found | kept |
 | R4 sent-file content | 5/5 | 5/5 | pass | no exposure found | kept |
 | R5 scoped instructions | 5/5 | 5/5 | pass | no exposure found | kept |
-| R6 table styling | 3/3 | 3/3 | pass | 5 violation candidates | kept; hook candidate |
+| R6 table styling | 3/3 | 3/3 | pass | 5 violation candidates (5 HTML writes, after dropping 1 non-HTML hit) | kept; hook candidate |
 
 - **Retired: 0 of 17.** Rule count and always-loaded bytes are unchanged (index 12,976 bytes before and after).
 - **R1 is still needed:** the smaller model fails without it.
-- **R6 is the evidence rule in action.** It passed 3/3 on both models, yet the transcripts held 5 file writes that look like lapses (violation candidates, not confirmed), so it stays and is a candidate for enforcement by a hook. The same pattern as the first cluster's shell rule.
+- **R6 is the evidence rule in action.** It passed 3/3 on both models, yet the transcripts held 5 HTML file writes that look like lapses (violation candidates, not confirmed). The check first found 6 hits; one was a Markdown write of the rule's own text, dropped after the first pass (a filter applied to the same 414 transcripts, not a change to the pattern, so read the count as tuned on this data), so it stays and is a candidate for enforcement by a hook. The same pattern as the first cluster's shell rule.
 - **R2 to R5 passed every clean-room test, but a probe pass alone does not retire a rule.** The evidence rule also asks for transcripts showing no lapses. The scan found no sessions doing this kind of work: it happens in another profile, so "no violations" meant no exposure, not good behaviour. Absence of evidence is not evidence, so the four were kept and marked as validated on probes only.
 - **Check coverage:** 1 of 6 probed rules has a deterministic transcript check; the rest are judgment rules.
 
