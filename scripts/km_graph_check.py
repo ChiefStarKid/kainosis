@@ -8,6 +8,13 @@ Never writes.
 Memory dir: --mem <dir>, else the CLAUDE_PLUGIN_OPTION_MEMORY_PATH or
 KM_MEMORY_PATH environment variable.
 
+Every human run starts with one `preflight:` line (`--preflight` prints only it):
+  preflight: OK                         files and MEMORY.md found
+  preflight: CREATE-ONLY (no memory files | MEMORY.md missing)    skip stale/overlap work, create
+  preflight: STOP (memory_path not set | memory dir not found: X) exit 2, nothing else printed
+  preflight: DEGRADED (graph check failed: E)                      exit 1; skip the numbers
+An empty --mem (an unset plugin option) or an unexpanded `${...}` is STOP.
+
 A `supersedes:` target with no file is reported as a dead link.
 Scans top-level *.md only. Excluded from every check: MEMORY.md, log.md and
 all subdirectories (eval/, dormant/, ...). [[ ]] inside code spans are
@@ -47,8 +54,27 @@ CAP = 12
 def default_mem():
     for var in ("CLAUDE_PLUGIN_OPTION_MEMORY_PATH", "KM_MEMORY_PATH"):
         if os.environ.get(var):
-            return Path(os.environ[var])
-    sys.exit("No memory dir: pass --mem <dir> or set KM_MEMORY_PATH")
+            return os.environ[var]
+    return ""
+
+
+def preflight(mem_arg):
+    """-> (state, detail, mem Path or None). state: OK | CREATE-ONLY | STOP."""
+    raw = mem_arg if mem_arg is not None else default_mem()
+    if not str(raw).strip():
+        return "STOP", "memory_path not set", None
+    mem = Path(raw)
+    if not mem.is_dir():
+        return "STOP", f"memory dir not found: {raw}", None
+    if not any(p.name not in SKIP for p in mem.glob("*.md")):
+        return "CREATE-ONLY", "no memory files", mem
+    if not (mem / "MEMORY.md").exists():
+        return "CREATE-ONLY", "MEMORY.md missing", mem
+    return "OK", "", mem
+
+
+def pre_line(state, detail):
+    return f"preflight: {state}" + (f" ({detail})" if detail else "")
 
 
 def frontmatter(text):
@@ -200,7 +226,8 @@ def show(label, items, full):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--mem", type=Path)
+    ap.add_argument("--mem")
+    ap.add_argument("--preflight", action="store_true", help="print only the preflight line")
     ap.add_argument("--reachable", nargs="*", default=[])
     ap.add_argument("--reachable-excluding-self", nargs="*", default=[])
     ap.add_argument("--json", action="store_true")
@@ -208,14 +235,24 @@ def main():
     a = ap.parse_args()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-    mem = a.mem or default_mem()
-    if not mem.is_dir():
-        sys.exit(f"Memory dir not found: {mem}")
-    r = analyse(mem, a.reachable, a.reachable_excluding_self)
+    state, detail, mem = preflight(a.mem)
+    if state == "STOP":
+        print(pre_line(state, detail))
+        sys.exit(2)
+    if a.preflight:
+        print(pre_line(state, detail))
+        return
+    try:
+        r = analyse(mem, a.reachable, a.reachable_excluding_self)
+    except Exception as e:  # report, never a traceback: the skill skips the numbers
+        print(pre_line("DEGRADED", f"graph check failed: {type(e).__name__}: {e}"))
+        sys.exit(1)
 
     if a.json:
+        r["preflight"] = pre_line(state, detail)[len("preflight: "):]
         print(json.dumps(r, indent=1))
         return
+    print(pre_line(state, detail))
     fm = r["feedback_missing"]
     print(f"memory dir: {r['memory_dir']}")
     print(f"files: {r['files']} (feedback {r['feedback_files']}) | MEMORY.md: {r['memory_md_lines']} lines, "
