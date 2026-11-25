@@ -19,4 +19,11 @@ One PRD per roadmap issue. The issue is the system of record; these say what and
 | [#13](https://github.com/ChiefStarKid/kainosis/issues/13) | [Root-led close-out for multi-session work](13-root-led-closeout.md) | Later |
 | [#17](https://github.com/ChiefStarKid/kainosis/issues/17) | [Source and added tags per memory node](17-source-and-added-tags.md) | Later |
 | [#18](https://github.com/ChiefStarKid/kainosis/issues/18) | [Last-used report per memory file and skill (report only)](18-last-used-report.md) | Later |
+| [#23](https://github.com/ChiefStarKid/kainosis/issues/23) | [Auto km lean: safe unattended mode gated by objective checks](23-auto-km-lean.md) | In progress |
+| [#24](https://github.com/ChiefStarKid/kainosis/issues/24) | [Compaction starts lean: PreCompact hook runs a lean pass](24-compaction-starts-lean.md) | Later |
+| [#26](https://github.com/ChiefStarKid/kainosis/issues/26) | [End-of-thread chain: km, then compact or archive](26-end-of-thread-chain.md) | Later |
+| [#27](https://github.com/ChiefStarKid/kainosis/issues/27) | [Beginner path: three levels and a Start here guide](27-beginner-path.md) | Later |
+| [#28](https://github.com/ChiefStarKid/kainosis/issues/28) | [Draft-to-sent as a correction source and outcome measure](28-draft-to-sent.md) | Later |
+| [#29](https://github.com/ChiefStarKid/kainosis/issues/29) | [Graph granularity: research, then typed links and validity fields](29-graph-granularity.md) | Later |
 | [#34](https://github.com/ChiefStarKid/kainosis/issues/34) | [Parent-triggered km verdict and lean, with a readable result](34-parent-triggered-km.md) | Next |
+| [#37](https://github.com/ChiefStarKid/kainosis/issues/37) | [km skill: script the deterministic checks, fix lean load and the case check contract](37-km-skill-scripting.md) | Next |
