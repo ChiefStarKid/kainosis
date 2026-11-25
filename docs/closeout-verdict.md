@@ -1,6 +1,6 @@
 # Close-out verdict
 
-Definitions for the close-out verdict that `km` ends every run with. `skills/km/SKILL.md` holds the short steps; this page holds the formats and rules. Read on demand, never at session start.
+Definitions for the close-out verdict that `km` ends every run with. `skills/km/SKILL.md` holds the short steps; this page holds the formats and rules. A full run reads it at Step 9; a lean run never opens it (the skill carries the lean rules).
 
 **Purpose.** OWNER archives, deletes or compacts a thread on the strength of close-out. The verdict turns that into a checked decision. It is also the input for session grooming: **only sessions whose last close-out verdict is SAFE are archive or delete candidates.** NOT SAFE, lean verdicts and sessions with no verdict are never candidates.
 
@@ -72,7 +72,7 @@ Reverse sweep: re-read 41 turns, 1 find (a path OWNER pasted, now carry-over, an
 
 `NOT SAFE — row 2 claims "merged" but the edit was not re-read this run. Clear it: read feedback_reply_all.md and confirm the merged text.`
 
-After the read confirms it, the same ledger gives `SAFE`. `tests/test_km_verdict.py` runs exactly this case (fixtures in `tests/fixtures/verdict/`) plus the other rules above. The script is a reference implementation of the rules, stdlib only; the skill applies them in chat and does not run it.
+After the read confirms it, the same ledger gives `SAFE`. `tests/test_km_verdict.py` runs exactly this case (fixtures in `tests/fixtures/verdict/`) plus the other rules above. Step 9 runs `scripts/km_verdict_check.py` on a ledger the model writes as JSON (fields in the script's docstring). The script checks the rules above, plus what is file-backed when given `--mem`: a row's `file` exists, the recorded commit exists (`git cat-file -e`), written paths are committed with no pending change. A full or verdict-only ledger must quote the `Full-load marker` from `docs/km-full.md` as `full_loaded_marker`, or the verdict is `NOT SAFE`; a lean ledger needs none. It cannot check a draft sent, a process gone or a deferred home outside memory: it lists those as `Model-verified`, and the model must have checked each with a read-only call. The script is stdlib only and read-only.
 
 ## Data handling
 

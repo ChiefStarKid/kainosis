@@ -19,7 +19,7 @@ Context efficiency first. Memory content standard: `SCHEMA`. Size budget for thi
 - `MEM` = `${user_config.memory_path}`.
 - `GRAPH` = `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_graph_check.py" --mem "${user_config.memory_path}"`. Read-only; shared with km-audit.
 - `SCHEMA` = `${CLAUDE_PLUGIN_ROOT}/docs/schema.md` (frontmatter A1, description A3, body A4, graph metrics A5, sources A6).
-- `VERDICT` = `${CLAUDE_PLUGIN_ROOT}/docs/closeout-verdict.md` (ledger, verdict rules, example). Read before Step 9.
+- `VERDICT` = `${CLAUDE_PLUGIN_ROOT}/docs/closeout-verdict.md` (full-run formats and rules). Full run: read at Step 9. Lean never opens it.
 - `FULL` = `${CLAUDE_PLUGIN_ROOT}/docs/km-full.md`: the full-run-only steps. Full run: read at Step 1. Lean never opens it.
 - `AUTO_DOC` = `${CLAUDE_PLUGIN_ROOT}/docs/auto-km-lean.md` (§Wiring); the gate is `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_auto_gate.py"`.
 - `SCOPE` = `${user_config.scope_rule_file}` (may be empty: then everything in `MEM` is in scope).
@@ -151,12 +151,13 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
 
 ## Step 9 — Close-out verdict
 
-After Step 8, so it can verify what was written. Rules and formats: `VERDICT`. Chat only; write nothing.
+After Step 8, so it can verify what was written. Chat only; write nothing to `MEM`.
 
 1. **Ledger (full and lean).** Every candidate, case and Round 3/4 item: `written`, `merged`, `rejected` or `deferred` (where). Lean: candidates only.
-2. **Loose-ends sweep, carry-over list (full only).** Per `FULL`; formats in `VERDICT`.
-3. **Verify, then verdict.** Check each claim with one read-only call. **Never issue SAFE on an unverified claim.** Full: `SAFE` or `NOT SAFE — <blocker + clearing action>`. OWNER may accept a blocker; Claude never does. Lean: `SAFE TO COMPACT` or `NOT SAFE TO COMPACT` stating that the sweeps were not run; never plain `SAFE`. `${CLAUDE_PLUGIN_ROOT}/scripts/km_verdict_check.py` checks a ledger's consistency, not its truth.
-4. NOT SAFE: print "KM close-out written — thread NOT yet safe to close" instead of "complete". Only SAFE sessions are archive/delete candidates.
+2. **Full only:** loose-ends sweep and carry-over list per `FULL`; read `VERDICT` for formats and the verdict rules.
+3. **Check.** Verify each claim with one read-only call, then write the ledger as JSON in the OS temp dir: `{"mode":"lean|full|verdict-only","full_loaded_marker":"<FULL's Full-load marker; not for lean>","candidates":[{"id":1,"disposition":"written","file":"<slug>.md","where":"..","verified":true,"evidence":".."}],"commit":"<hash>|null","written_paths":[".."],"reverse_sweep":{"ran":true,"unreconciled":[]},"loose_ends":[{"item":"..","status":"clear|tracked|open","where":".."}],"carry_over":[{"item":"..","where":".."}]}`. Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_verdict_check.py" <json> --mem "<MEM>"` and report its verdict line and its `Model-verified` list. The script checks the file, commit and marker claims; the rest stay yours. Lean omits `reverse_sweep`, `loose_ends`, `carry_over`.
+4. **Verdict.** **Never issue SAFE on an unverified claim.** Full: `SAFE` or `NOT SAFE — <blocker + clearing action>`. OWNER may accept a blocker; Claude never does. Lean: `SAFE TO COMPACT` or `NOT SAFE TO COMPACT`, stating that the reverse and loose-ends sweeps were not run; never plain `SAFE`. `SAFE TO COMPACT` needs every candidate dispositioned with verified evidence and every `thread` item in the Keep line.
+5. NOT SAFE: print "KM close-out written — thread NOT yet safe to close" instead of "complete". Only full-run SAFE sessions are archive/delete candidates.
 
 ## Error handling
 

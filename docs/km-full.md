@@ -2,6 +2,8 @@
 
 Steps that only a full `km` run performs, moved out of `skills/km/SKILL.md` so a `km lean` run (right before `/compact`) does not load them. A full run reads this file at Step 1, before Step 2. A lean run never opens it. Step numbers match the skill. Names (`OWNER`, `MEM`, `GRAPH`, `SCHEMA`, `VERDICT`) are defined in the skill.
 
+Full-load marker: `km-full-v1-3b-r34-s6-s9`. The Step 9 ledger of a full run quotes it as `full_loaded_marker`; `scripts/km_verdict_check.py` answers `NOT SAFE` without it.
+
 A full run reaches `SAFE` only after Step 3b, Round 3, Round 4, Step 6 and the Step 9 loose-ends sweep and carry-over list have run.
 
 ## Step 3 addition — Round 4 candidate reads
