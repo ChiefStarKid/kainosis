@@ -4,6 +4,20 @@ Versions follow `plugin.json`. Installed copies update only when the version is 
 
 Any change to what the plugin reads, writes or sends is listed under **Data handling** in its release, and [PRIVACY.md](PRIVACY.md) is updated in the same release.
 
+## 0.3.0
+
+- Added: close-out verdict in `km` ([#19](https://github.com/ChiefStarKid/kainosis/issues/19)). Close-out now ends with a ledger of what was captured and what was left open, a loose-ends sweep, a carry-over list, a reverse sweep (is anything in the thread not yet in memory?) and a verdict, SAFE or NOT SAFE, for ending or archiving the thread. `km lean` never gives a plain SAFE. A carry-over item with no home blocks SAFE unless you accept it. `scripts/km_verdict_check.py`, with a test.
+- Added: `km-audit` can propose restructuring an oversized index into theme hubs ([#20](https://github.com/ChiefStarKid/kainosis/issues/20)). `scripts/km_index_restructure.py` groups the feedback lines into a few hub files, keeps every one-line description verbatim, and replays reachability before and after. A query that passed before and fails after, an altered description or a lost slug blocks the change. `--themes` takes your own grouping. Nothing is written to your memory folder until you say yes.
+- Added: `km-audit` flags stale command names and non-existent paths in your CLAUDE.md files after a rename (report only), and a `truncated` load receipt now outranks the byte target as the first finding.
+- Added: second-cluster results page ([#1](https://github.com/ChiefStarKid/kainosis/issues/1)), `docs/second-cluster.md`: 17 rules, 6 probed, 100 runs plus 2 canaries, 0 retired. One person's memory, a second data point, not proof.
+- Known limit: the restructure's retrieval replay checks reachability and stored queries; the model-judged retrieval replay in `docs/evals.md` still runs on the same queries.
+
+**Data handling:**
+- Close-out verdict: no new data is read or written. The ledger, sweeps and verdict are shown in the chat only. The checks use read-only local calls (file exists, `git log`, process list) already within what `km` does.
+- Index restructure: `propose` and `replay` are read-only on your memory folder (the candidate goes to a scratch folder). `apply` refuses without your approval, re-runs replay first, then writes only `MEMORY.md` and new `index_feedback_<theme>.md` hub files in the memory folder. It is a normal commit, reverted with `git revert`.
+- Stale-name check: `km-audit` already opens your CLAUDE.md files to count always-loaded bytes. It now also searches their text for renamed command names and tests whether the paths they name exist on disk. Existence check only; no other file is opened and CLAUDE.md is never edited without your yes.
+- No network access; nothing new leaves your machine. [PRIVACY.md](PRIVACY.md) is updated to match.
+
 ## 0.2.2
 
 - Changed: the example PreCompact hook (`hooks/precompact_keep.py`) now logs each run, so you can see whether it fired ([#6](https://github.com/ChiefStarKid/kainosis/issues/6)). `hooks/README.md` documents the log and a tip: queue `/compact` while `km lean` is still running and it fires after the Q&A.
