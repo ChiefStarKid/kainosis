@@ -163,20 +163,13 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
 1. Run the Behaviour G checks on everything about to be written.
 2. CREATE → `MEM/<slug>.md`. UPDATE → edit with the confirmed changes. DELETE → confirmed files only; ask first if the evidence is weak.
 3. MEMORY.md, confirmed lines only (Behaviour C): add, update or remove entries in the matching section. Format: `- [Name](file.md) — one-line description`.
-4. Cases → append to `MEM/eval/cases.jsonl` (create `eval/` if absent), one line per confirmed case:
-   `{"rule": "<slug>", "session": "<$CLAUDE_CODE_SESSION_ID>", "model": "<id|unknown>", "date": "YYYY-MM-DD", "situation": "...", "expected": "...", "check": <{"type": ...}>|null, "kind": "correction|violation|re-explanation", "captured_by": "km", "status": "open"}`
-   Schema shared with km-audit (`${CLAUDE_PLUGIN_ROOT}/docs/evals.md` §Files). Dedup: skip if a line with the same `rule` + `session` already exists. One case per rule per session.
-5. Retrieval queries → append to `MEM/eval/retrieval.jsonl`:
-   `{"query": "...", "expected": "<slug>", "session": "<$CLAUDE_CODE_SESSION_ID>", "date": "YYYY-MM-DD"}`
-6. Behaviour H: `GRAPH --reachable <slugs>`; fix any `UNREACHABLE`.
-7. Full only: confirmed [BUILD] items → the `## Backlog` table in `MEM/build_backlog.md`, one row each: `| YYYY-MM-DD | <candidate> | <session context> | open |`. If the file is absent, create it with outbound links and index it. 
-8. Append to `MEM/log.md` under the `---` separator:
-   `YYYY-MM-DD | <topic, 5–8 words> | N creates, N updates, N deletes, N cases[, lean]`
-9. If `MEM` is inside a git repo, commit so every close-out is a revertable commit:
+4. Behaviour H: `GRAPH --reachable <slugs>`; fix any `UNREACHABLE`.
+5. Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_close.py" --mem "<MEM>" --input <json>` to write the confirmed cases, one retrieval query per CREATE, full-only [BUILD] rows and the log line; `--help` gives the format. If `build_backlog.md` is absent, pass `backlog_links` and index the new file. Non-zero exit: report the error, never hand-write these appends.
+6. If `MEM` is inside a git repo, commit so every close-out is a revertable commit:
    - `git -C "<MEM>" add -- .` (the memory dir only, never `-A` from the repo root)
    - `git -C "<MEM>" commit -m "chore(km): KM close-out YYYY-MM-DD — <topic>"` (skip if nothing is staged)
    - Push only if `SCOPE` says to, to the branch it names. Never force-push; never push to the default branch unless `SCOPE` says so. If the push fails, report it.
-10. Output:
+7. Output:
     ```
     KM close-out complete.
     Written: <files created/updated/deleted>
