@@ -1,4 +1,4 @@
-"""Run: python scripts/test_km_index_restructure.py
+"""Run: python tests/test_km_index_restructure.py
 Builds a synthetic oversized memory graph (fictional bakery, 120 feedback lines)
 in a temp dir; nothing real is used."""
 import json
@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-script = str(Path(__file__).resolve().parent / "km_index_restructure.py")
+script = str(Path(__file__).resolve().parent.parent / "scripts" / "km_index_restructure.py")
 THEMES = {
     "oven": ["preheat", "steam", "rack", "door", "timer", "tray"],
     "dough": ["proof", "hydration", "knead", "flour", "yeast", "fold"],

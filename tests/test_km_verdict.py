@@ -1,11 +1,11 @@
-"""Run: python scripts/test_km_verdict.py"""
+"""Run: python tests/test_km_verdict.py"""
 import copy
 import json
 import sys
 from pathlib import Path
 
 root = Path(__file__).resolve().parent
-sys.path.insert(0, str(root))
+sys.path.insert(0, str(root.parent / "scripts"))
 from km_verdict_check import verdict  # noqa: E402
 
 fx = root / "fixtures" / "verdict"

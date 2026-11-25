@@ -1,4 +1,4 @@
-"""Run: python scripts/test_km_load_receipt.py"""
+"""Run: python tests/test_km_load_receipt.py"""
 import json
 import os
 import subprocess
@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
-fx = root / "scripts" / "fixtures" / "load_receipt"
+fx = root / "tests" / "fixtures" / "load_receipt"
 mem = root / "examples" / "graph"
 script = str(root / "scripts" / "km_load_receipt.py")
 

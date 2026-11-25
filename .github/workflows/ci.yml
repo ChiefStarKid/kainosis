@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyYAML (frontmatter check only)
+        run: python -m pip install pyyaml
+      - name: Skill frontmatter parses
+        run: |
+          python - <<'PY'
+          import glob, sys, yaml
+          bad = 0
+          for p in sorted(glob.glob("skills/*/SKILL.md")):
+              t = open(p, encoding="utf-8").read().replace("\r\n", "\n")
+              if not t.startswith("---\n"):
+                  print(f"{p}: no frontmatter"); bad = 1; continue
+              fm = t.split("\n---\n", 1)[0][4:]
+              try:
+                  d = yaml.safe_load(fm)
+                  assert isinstance(d, dict) and d.get("name") and d.get("description")
+                  print(f"{p}: ok")
+              except Exception as e:
+                  print(f"{p}: {e}"); bad = 1
+          sys.exit(bad)
+          PY
+      - name: Skill size ceiling (20,000 bytes)
+        run: |
+          fail=0
+          for f in skills/*/SKILL.md; do
+            n=$(wc -c < "$f"); echo "$f: $n bytes"
+            [ "$n" -le 20000 ] || { echo "over the 20,000-byte ceiling"; fail=1; }
+          done
+          exit $fail
+      - name: Graph check on the example graph
+        run: |
+          out=$(python -I scripts/km_graph_check.py --mem examples/graph); echo "$out"
+          echo "$out" | grep -q "islands (0 inbound \[\[ \]\]): 0" && \
+          echo "$out" | grep -q "unreachable from MEMORY.md: 0" && \
+          echo "$out" | grep -q "dead \[\[ \]\] links: 0"
+      - name: Tests
+        run: |
+          for t in tests/test_*.py; do echo "== $t"; python -I "$t"; done
+
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Validate the plugin
+        run: claude plugin validate .

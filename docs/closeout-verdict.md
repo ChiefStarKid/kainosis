@@ -72,7 +72,7 @@ Reverse sweep: re-read 41 turns, 1 find (a path OWNER pasted, now carry-over, an
 
 `NOT SAFE — row 2 claims "merged" but the edit was not re-read this run. Clear it: read feedback_reply_all.md and confirm the merged text.`
 
-After the read confirms it, the same ledger gives `SAFE`. `scripts/test_km_verdict.py` runs exactly this case (fixtures in `scripts/fixtures/verdict/`) plus the other rules above. The script is a reference implementation of the rules, stdlib only; the skill applies them in chat and does not run it.
+After the read confirms it, the same ledger gives `SAFE`. `tests/test_km_verdict.py` runs exactly this case (fixtures in `tests/fixtures/verdict/`) plus the other rules above. The script is a reference implementation of the rules, stdlib only; the skill applies them in chat and does not run it.
 
 ## Data handling
 
