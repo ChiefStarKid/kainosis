@@ -131,12 +131,99 @@ with tempfile.TemporaryDirectory() as t:
     check("crlf old case line intact", (mem / "eval" / "cases.jsonl").read_bytes().startswith(b'{"rule": "old", "session": "s0"}\r\n'))
     check("new file is LF", b"\r" not in (mem / "eval" / "retrieval.jsonl").read_bytes())
 
-    # no trailing newline: one is added before the append
+    # no trailing newline: the append goes on a new line and the file still ends bare
     d, mem = fresh(base)
     (mem / "log.md").write_bytes(b"---\n2026-05-01 | x | 0 creates, 0 updates, 0 deletes, 0 cases")
+    (mem / "build_backlog.md").write_bytes(b"# B\n\n## Backlog\n\n| Date | Candidate | Session context | Status |\n|---|---|---|---|\n| 2026-05-01 | a | b | open |")
+    (mem / "eval").mkdir()
+    (mem / "eval" / "cases.jsonl").write_bytes(b'{"rule": "old", "session": "s0"}')
     rc, out, err = go(d, mem, load_input())
-    log = lines(mem / "log.md")
-    check("no trailing newline", rc == 0 and len(log) == 3 and log[1].startswith("2026-05-01"), str(log))
+    b = (mem / "log.md").read_bytes()
+    check("no trailing newline kept", rc == 0 and b.startswith(b"---\n2026-05-01 | x | 0 creates, 0 updates, 0 deletes, 0 cases\n2026-06-01 |")
+          and not b.endswith(b"\n"), repr(b))
+    bb = (mem / "build_backlog.md").read_bytes()
+    check("backlog bare end kept", bb.endswith(b"open |") and bb.count(b"\n") == 7, repr(bb))
+    cb = (mem / "eval" / "cases.jsonl").read_bytes()
+    check("jsonl bare end kept", cb.startswith(b'{"rule": "old", "session": "s0"}\n{"rule"') and not cb.endswith(b"\n"), repr(cb))
+
+    # mixed line endings: untouched lines keep their own endings
+    d, mem = fresh(base)
+    (mem / "log.md").write_bytes(b"# Log\r\n---\n2026-05-01 | x | 0 creates, 0 updates, 0 deletes, 0 cases\r\n")
+    rc, out, err = go(d, mem, load_input())
+    b = (mem / "log.md").read_bytes()
+    check("mixed endings preserved", rc == 0 and b.startswith(b"# Log\r\n---\n2026-05-01 | x | 0 creates, 0 updates, 0 deletes, 0 cases\r\n2026-06-01 |")
+          and b.endswith(b"\r\n"), repr(b))
+
+    # BOM: kept, and does not defeat the dedup of the first line
+    d, mem = fresh(base)
+    (mem / "eval").mkdir()
+    first = json.dumps({"rule": "feedback_sheet_read_before_write", "session": "sess-1"})
+    (mem / "eval" / "cases.jsonl").write_bytes(b"\xef\xbb\xbf" + first.encode() + b"\n")
+    (mem / "log.md").write_bytes(b"\xef\xbb\xbf---\n")
+    rc, out, err = go(d, mem, load_input())
+    cb = (mem / "eval" / "cases.jsonl").read_bytes()
+    check("bom kept", rc == 0 and cb.startswith(b"\xef\xbb\xbf{") and cb.count(b"\xef\xbb\xbf") == 1
+          and (mem / "log.md").read_bytes().startswith(b"\xef\xbb\xbf---\n"), err)
+    check("bom does not defeat dedup", cb.count(b"feedback_sheet_read_before_write") == 1 and "skipped case" in out, out)
+
+    # non-UTF-8 file: refused, nothing written
+    d, mem = fresh(base)
+    (mem / "log.md").write_bytes(b"---\n2026-05-01 | caf\xe9\n")
+    before = tree(mem)
+    rc, out, err = go(d, mem, load_input())
+    check("non-utf8 refused", rc == 2 and "UTF-8" in err and "nothing written" in err, err)
+    check("non-utf8 wrote nothing", tree(mem) == before)
+
+    # unreadable target (a directory where a file belongs): refused, nothing written
+    d, mem = fresh(base)
+    (mem / "eval").mkdir()
+    (mem / "eval" / "retrieval.jsonl").mkdir()
+    before = tree(mem)
+    rc, out, err = go(d, mem, load_input())
+    check("unreadable target refused", rc == 2 and "nothing written" in err, err)
+    check("unreadable target wrote nothing", tree(mem) == before and not (mem / "eval" / "cases.jsonl").exists())
+
+    # input inside the memory folder: refused
+    d, mem = fresh(base)
+    f = mem / "in.json"
+    f.write_text(json.dumps(load_input()), encoding="utf-8")
+    rc, out, err = run("--mem", str(mem), "--input", str(f))
+    check("input inside mem refused", rc == 2 and "outside the memory folder" in err
+          and (mem / "log.md").read_bytes() == (fx / "mem" / "log.md").read_bytes(), err)
+
+    # written paths are listed, relative to --mem
+    d, mem = fresh(base)
+    rc, out, err = go(d, mem, load_input())
+    files = [ln[6:] for ln in out.splitlines() if ln.startswith("file: ")]
+    check("file lines", files == ["eval/cases.jsonl", "eval/retrieval.jsonl", "build_backlog.md", "log.md"], str(files))
+    check("no temp files left", not list(mem.rglob("*.km_tmp")))
+    d, mem = fresh(base)
+    rc, out, err = go(d, mem, load_input(), "--dry-run")
+    check("dry run lists would-write", "would write file: log.md" in out and not any(ln.startswith("file: ") for ln in out.splitlines()), out)
+
+    # a failure while writing temp files leaves nothing behind
+    sys.path.insert(0, str(root.parent / "scripts"))
+    import km_close
+    d, mem = fresh(base)
+    before = tree(mem)
+    calls = []
+    real = km_close.write_tmp
+
+    def flaky(tmp, data):
+        calls.append(tmp)
+        if len(calls) == 3:
+            raise OSError("disk full")
+        real(tmp, data)
+
+    km_close.write_tmp = flaky
+    f = d / "in.json"
+    f.write_text(json.dumps(load_input()), encoding="utf-8")
+    sys.stderr = open(os.devnull, "w")
+    rc = km_close.main(["--mem", str(mem), "--input", str(f)])
+    sys.stderr = sys.__stderr__
+    km_close.write_tmp = real
+    check("partial write refused", rc == 2 and len(calls) == 3)
+    check("partial write left nothing", tree(mem) == before and not list(mem.rglob("*.km_tmp")))
 
     # missing build_backlog.md: backlog_links required, then created with table and links
     d, mem = fresh(base)
@@ -160,23 +247,23 @@ with tempfile.TemporaryDirectory() as t:
     bl = lines(mem / "build_backlog.md")
     check("heading added", rc == 0 and bl[-1].startswith("| 2026-06-01 |") and bl[-5] == "## Backlog", str(bl))
 
-    # missing log.md, and log.md without a separator
+    # missing log.md is created with the line only; a log.md without a separator gets none
     d, mem = fresh(base)
     (mem / "log.md").unlink()
     rc, out, err = go(d, mem, load_input())
     log = lines(mem / "log.md")
-    check("log created with separator", rc == 0 and log[0] == "---" and log[1].startswith("2026-06-01 |"), str(log))
+    check("log created, no separator", rc == 0 and len(log) == 1 and log[0].startswith("2026-06-01 |"), str(log))
     d, mem = fresh(base)
     (mem / "log.md").write_bytes(b"# Log\n\nfree text\n")
     rc, out, err = go(d, mem, load_input())
     log = lines(mem / "log.md")
-    check("separator added", rc == 0 and log[-2] == "---" and log[-3] == "free text" and "no '---'" in out, str(log))
+    check("no separator added", rc == 0 and log[-2] == "free text" and "---" not in log and "separator" not in out + err, str(log))
 
     # dry run writes nothing
     d, mem = fresh(base)
     before = tree(mem)
     rc, out, err = go(d, mem, load_input(), "--dry-run")
-    check("dry run", rc == 0 and tree(mem) == before and "dry run" in out)
+    check("dry run", rc == 0 and tree(mem) == before and "dry run" in out and "separator" not in out)
 
     # bad input: refused, nothing written, exit 2
     c1 = load_input()["cases"][0]
@@ -214,7 +301,7 @@ with tempfile.TemporaryDirectory() as t:
     # missing memory folder, missing input file
     rc, out, err = run("--mem", str(base / "absent"), "--input", str(fx / "input.json"))
     check("missing mem", rc == 2 and "memory folder not found" in err)
-    rc, out, err = run("--mem", str(base), "--input", str(base / "absent.json"))
+    rc, out, err = run("--mem", str(fx / "mem"), "--input", str(base / "absent.json"))
     check("missing input", rc == 2 and "cannot read input" in err)
 
     # --help carries the input format

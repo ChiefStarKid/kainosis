@@ -4,6 +4,15 @@ Versions follow `plugin.json`. Installed copies update only when the version is 
 
 Any change to what the plugin reads, writes or sends is listed under **Data handling** in its release, and [PRIVACY.md](PRIVACY.md) is updated in the same release.
 
+## Unreleased
+
+- Changed: `skills/km/SKILL.md` is smaller, 18,261 to about 14,600 bytes committed ([#30](https://github.com/ChiefStarKid/kainosis/issues/30)). Steps only a full run performs moved to `docs/km-full.md` (read at Step 1 of a full run, never by `km lean`); the structure rules that apply only when creating wiki or per-tool files are in `docs/structure-rules.md`.
+- Added: `scripts/km_close.py`, which writes the mechanical Step 8 appends (cases, retrieval queries, backlog rows, log line) so the model no longer does it by hand. It validates everything first, writes through temp files, keeps each file's line endings, final newline and BOM, refuses non-UTF-8 files, never adds a separator to `log.md`, and prints the paths it wrote.
+- Fixed: the close-out commit now stages only the files the run wrote, never `git add .`, so another session's unfinished work in a shared memory repo is not committed. The close-out input file is kept in the temp folder, outside the memory folder.
+- Fixed: three doc pointers in the skill lost their `${CLAUDE_PLUGIN_ROOT}/` prefix and are restored. A lean run with no candidates skips the two question rounds. OWNER's instruction in the conversation overrides the scope rule's push setting. The lean verdict again states that the sweeps were not run.
+
+**Data handling:** no new data is read or written: `km_close.py` writes the same memory-folder files `km` already wrote, plus a short-lived `*.km_tmp` file beside each. No network access. [PRIVACY.md](PRIVACY.md) needs no change.
+
 ## 0.3.0
 
 - Added: close-out verdict in `km` ([#19](https://github.com/ChiefStarKid/kainosis/issues/19)). Close-out now ends with a ledger of what was captured and what was left open, a loose-ends sweep, a carry-over list, a reverse sweep (is anything in the thread not yet in memory?) and a verdict, SAFE or NOT SAFE, for ending or archiving the thread. `km lean` never gives a plain SAFE. A carry-over item with no home blocks SAFE unless you accept it. `scripts/km_verdict_check.py`, with a test.

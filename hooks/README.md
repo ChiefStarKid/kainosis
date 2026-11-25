@@ -80,7 +80,7 @@ A rule that keeps failing as soft text in memory (the `km-audit` flow: "Soft rul
 ```
 
 3. Tell `km lean`, in that conversation, that you run the hook. It cannot detect it, and without your statement it writes no file. It then also writes the Keep text to the temp file and still prints the paste-ready last line.
-   What `km lean` then does: writes the Keep text (the part after `/compact `, i.e. `Keep: ...`) to `<temp dir>/claude/km-keep.txt` (`%TEMP%` on Windows, `$TMPDIR` or `/tmp` elsewhere), overwriting any old file, and adds before the last line: "Or type a bare `/compact`: the hook feeds the Keep list in." Without your statement it writes no file (a stray file would feed a later auto-compaction). It never skips the paste-ready last `/compact Keep:` line.
+   What `km lean` then does: writes the Keep text (the part after `/compact `, i.e. `Keep: ...`) to `<temp dir>/claude/km-keep.txt` (`%TEMP%` on Windows, `$TMPDIR` or `/tmp` elsewhere), overwriting any old file, and adds before the last line: "Or type a bare `/compact`: the hook feeds the Keep list in." A stray file would feed a later auto-compaction, hence the statement. It never skips the paste-ready last `/compact Keep:` line.
 
 **Tip: queue the compact.** After you send `/kainosis:km lean`, you can type `/compact` straight away while it is still running. It queues and runs once `km lean` has finished and its questions are answered (tested 2026-11-23: the questions came first, and the Keep list carried through). One bare `/compact` then does the whole hand-off.
 

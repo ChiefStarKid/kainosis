@@ -127,6 +127,7 @@ Everything stays on your machine except the two items marked **network**.
 | `km` | The current conversation; files in `memory_path`; your `scope_rule_file` | Memory files, `MEMORY.md`, `log.md` and `eval/*.jsonl` inside `memory_path`. `km lean` also writes `<temp dir>/claude/km-keep.txt` (the Keep line already shown in the chat), only when you have said in that conversation that you run the PreCompact example hook | If `memory_path` is in a git repo it commits there. It runs `git push` to **your own remote** only if your scope file says to, to the branch it names; never a force-push |
 | `km-audit` | Files in `memory_path`; your past Claude Code session transcripts in your config dir (`<config dir>/projects/*/*.jsonl`, at most the 60 newest since the last run); for the load receipt, their loaded-instructions entries, and with the optional `--history` flag read-only `git log`/`git show` in your memory repo | Memory files and `eval/` state inside `memory_path`, and a plan file in the session scratchpad | Commits like `km`; never pushes unless you say so in the session. Rule probes go through `bare_probe.py` (below) |
 | `scripts/km_graph_check.py` | Files in `memory_path` | Nothing | None |
+| `scripts/km_close.py` (run by `km` at close-out) | A JSON file of the confirmed items, kept in the temp folder; `eval/*.jsonl`, `log.md` and `build_backlog.md` in `memory_path` | Appends to those same files, through a temp file renamed into place; prints the paths it wrote | None |
 | `scripts/bare_probe.py` (optional, Windows) | A token you stored in Windows Credential Manager (`ClaudeBareProbe-OAuth`) | An empty config folder and a work folder under `--root` / `KM_BARE_ROOT` (default `<system drive>\km-bare-probe`) | **network:** runs `claude -p` to send short test prompts to Anthropic, as you, with that token. A prompt is a scenario rebuilt from one of your recorded cases and, in one of the two arms, the text of the rule under test |
 | `scripts/bare_probe_token_setup.py` (optional, once) | Your clipboard (the token you copied from `claude setup-token`) | The token into Windows Credential Manager; then it clears the clipboard. It prints only the token's length | None |
 
@@ -176,8 +177,8 @@ Items marked `data-handling` change what the plugin reads, writes or sends; they
 .claude-plugin/   plugin.json (name, version, options) · marketplace.json
 skills/km/        SKILL.md
 skills/km-audit/  SKILL.md
-scripts/          km_graph_check.py · bare_probe.py · bare_probe_token_setup.py
-docs/             schema.md · evals.md · scope-rule.md · evolution.md · second-cluster.md
+scripts/          km_graph_check.py · km_close.py · bare_probe.py · bare_probe_token_setup.py
+docs/             schema.md · evals.md · scope-rule.md · structure-rules.md · km-full.md · evolution.md · second-cluster.md
 hooks/            example hooks, not registered: rules_reminder.py · precompact_keep.py
 examples/graph/   fictional Memory Graph
 PRIVACY.md · SECURITY.md · CHANGELOG.md · LICENSE · CITATION.cff
