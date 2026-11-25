@@ -66,7 +66,7 @@ Review the entire conversation.
 - `rule`: the existing memory slug, the slug this run creates, or `claude_md:<short-name>` for a rule that exists only in CLAUDE.md
 - `model`: the model active at the failing message, not at close (read `/model` switches in context). If not determinable, `unknown`. Never guess.
 - `situation` and `expected`: one line each
-- `check`: a machine-checkable condition (e.g. "no `send` command with a new subject line"), else `null`. Never model-graded.
+- `check`: `null`, or an object `{"type": T, ...}` with T one of `tool_call_absent`, `tool_call_present`, `arg_matches`, `file_unchanged` (fields in `docs/evals.md` §Files). Prose is rejected (exit 2). Never model-graded: no object fits → `null`.
 
 **Targeted reads.** For each `graph` candidate, find overlapping files from MEMORY.md lines plus a `Grep` of `MEM` (top level) for its key terms. Read only those. Full run: also read the Round 4 discard candidates (`FULL`).
 
@@ -131,7 +131,7 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
 3. MEMORY.md, confirmed lines only (Behaviour C): add, update or remove entries in the matching section. Format: `- [Name](file.md) — one-line description`.
 4. Behaviour H: `GRAPH --reachable <slugs>`; fix any `UNREACHABLE`.
 5. Write the input JSON in the OS temp dir (`$TEMP`/`$TMPDIR`), never in `MEM`:
-   `{"topic":"..","creates":N,"updates":N,"deletes":N,"lean":true,"cases":[{"rule":"slug","model":"id|unknown","situation":"..","expected":"..","check":null,"kind":"correction|violation|re-explanation"}],"retrieval":[{"query":"..","expected":"slug"}]}`.
+   `{"topic":"..","creates":N,"updates":N,"deletes":N,"lean":true,"cases":[{"rule":"slug","model":"id|unknown","situation":"..","expected":"..","check":{"type":"tool_call_absent","tool":"Bash","pattern":"<regex>"}|null,"kind":"correction|violation|re-explanation"}],"retrieval":[{"query":"..","expected":"slug"}]}`.
    Full run: drop `lean`; [BUILD] rows go in `"backlog":[{"candidate":"..","context":".."}]` (if `build_backlog.md` is absent add `"backlog_links":[slugs]` and index the new file). Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_close.py" --mem "<MEM>" --input <json>`: it prints a `file: <path>` line per file written. Non-zero exit: report the error, never hand-write these appends.
 6. If `MEM` is inside a git repo, commit so every close-out is a revertable commit:
    - `git -C "<MEM>" add -- <paths>`: only paths this run wrote (steps 2-3, deletions too, and step 5's `file:` lines, relative to `MEM`). Never `add .` or `-A`: other sessions' work may sit in the repo.

@@ -32,7 +32,7 @@ On-demand reference for `km-audit`, read one § at a time by the step that names
  "status":"open | passing | retired"}
 ```
 - Dedup key: `rule` + `session`. `model` = model of the failing assistant message, never the session's.
-- `check`: object or `null`. `check.type`: `tool_call_absent`, `tool_call_present`, `arg_matches`, `file_unchanged`; `null` = judgment rule, counts against coverage.
+- `check`: `null` or an object whose `type` is one of `tool_call_absent`, `tool_call_present`, `arg_matches`, `file_unchanged`; `null` = judgment rule, counts against coverage. `scripts/km_close.py` validates only `type` (anything else, including prose, exits 2); the other fields are the check runner's, as in the example above (`tool`, `pattern`).
 - `km` appends at session close (owner-confirmed: the primary source for `failing`). The audit appends only triage candidates the owner confirms in the plan.
 
 ### scorecard.json — per artifact, per run
