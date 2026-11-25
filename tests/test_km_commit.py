@@ -96,6 +96,7 @@ with tempfile.TemporaryDirectory() as t:
     (mem / "a.md").write_text("again\n", encoding="utf-8")
     hook = mem / ".git" / "hooks" / "pre-commit"
     hook.write_text("#!/bin/sh\necho blocked >&2\nexit 1\n", encoding="utf-8")
+    hook.chmod(0o755)  # git skips a hook without the executable bit (Linux)
     rc, out, err = run("--mem", str(mem), "--input", str(inp), "--", "a.md")
     assert rc == 1 and "Committed: FAILED: git commit:" in out and out.splitlines()[-1] == "commit: null", (rc, out)
     hook.unlink()
