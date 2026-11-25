@@ -26,7 +26,7 @@ Reads the same transcripts triage already reads; the counts appear in the local 
 - A report invites misuse as a delete list. The labelling and the fixture for a rare critical rule are the guard.
 
 ## Dependencies
-Benefits from #8. Idea from Devin (Cognition), whose Dreaming step deletes notes no session used; Kainosis deliberately does not.
+Benefits from #8. Idea from Devin (Cognition), whose Dreaming step deletes notes no session used; the Kainosis plugin deliberately does not.
 
 ## Done when
 `km-audit` reports reads, invocations and last-used date, labels them informational, never uses them as a retirement reason, and a test proves a rare critical rule stays.
