@@ -19,7 +19,7 @@ Context efficiency first. Memory content standard: `SCHEMA`. Size budget for thi
 - `MEM` = `${user_config.memory_path}`.
 - `GRAPH` = `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_graph_check.py" --mem "${user_config.memory_path}"`. Read-only; shared with km-audit.
 - `SCHEMA` = `${CLAUDE_PLUGIN_ROOT}/docs/schema.md` (frontmatter A1, description A3, body A4, graph metrics A5, sources A6).
-- `VERDICT` = `${CLAUDE_PLUGIN_ROOT}/docs/closeout-verdict.md` (ledger, verdict rules, example). Read before Step 9.
+- `VERDICT` = `${CLAUDE_PLUGIN_ROOT}/docs/closeout-verdict.md` (full-run formats and rules). Full run: read at Step 9. Lean never opens it.
 - `FULL` = `${CLAUDE_PLUGIN_ROOT}/docs/km-full.md`: the full-run-only steps. Full run: read at Step 1. Lean never opens it.
 - `AUTO_DOC` = `${CLAUDE_PLUGIN_ROOT}/docs/auto-km-lean.md` (§Wiring); the gate is `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_auto_gate.py"`.
 - `SCOPE` = `${user_config.scope_rule_file}` (may be empty: then everything in `MEM` is in scope).
@@ -66,7 +66,7 @@ Review the entire conversation.
 - `rule`: the existing memory slug, the slug this run creates, or `claude_md:<short-name>` for a rule that exists only in CLAUDE.md
 - `model`: the model active at the failing message, not at close (read `/model` switches in context). If not determinable, `unknown`. Never guess.
 - `situation` and `expected`: one line each
-- `check`: a machine-checkable condition (e.g. "no `send` command with a new subject line"), else `null`. Never model-graded.
+- `check`: `null`, or an object `{"type": T, ...}` with T one of `tool_call_absent`, `tool_call_present`, `arg_matches`, `file_unchanged` (fields in `docs/evals.md` §Files). Prose is rejected (exit 2). Never model-graded: no object fits → `null`.
 
 **Targeted reads.** For each `graph` candidate, find overlapping files from MEMORY.md lines plus a `Grep` of `MEM` (top level) for its key terms. Read only those. Full run: also read the Round 4 discard candidates (`FULL`).
 
@@ -131,7 +131,7 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
 3. MEMORY.md, confirmed lines only (Behaviour C): add, update or remove entries in the matching section. Format: `- [Name](file.md) — one-line description`.
 4. Behaviour H: `GRAPH --reachable <slugs>`; fix any `UNREACHABLE`.
 5. Write the input JSON in the OS temp dir (`$TEMP`/`$TMPDIR`), never in `MEM`:
-   `{"topic":"..","creates":N,"updates":N,"deletes":N,"lean":true,"cases":[{"rule":"slug","model":"id|unknown","situation":"..","expected":"..","check":null,"kind":"correction|violation|re-explanation"}],"retrieval":[{"query":"..","expected":"slug"}]}`.
+   `{"topic":"..","creates":N,"updates":N,"deletes":N,"lean":true,"cases":[{"rule":"slug","model":"id|unknown","situation":"..","expected":"..","check":{"type":"tool_call_absent","tool":"Bash","pattern":"<regex>"}|null,"kind":"correction|violation|re-explanation"}],"retrieval":[{"query":"..","expected":"slug"}]}`.
    Full run: drop `lean`; [BUILD] rows go in `"backlog":[{"candidate":"..","context":".."}]` (if `build_backlog.md` is absent add `"backlog_links":[slugs]` and index the new file). Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_close.py" --mem "<MEM>" --input <json>`: it prints a `file: <path>` line per file written. Non-zero exit: report the error, never hand-write these appends.
 6. If `MEM` is inside a git repo, commit so every close-out is a revertable commit:
    - `git -C "<MEM>" add -- <paths>`: only paths this run wrote (steps 2-3, deletions too, and step 5's `file:` lines, relative to `MEM`). Never `add .` or `-A`: other sessions' work may sit in the repo.
@@ -151,12 +151,13 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
 
 ## Step 9 — Close-out verdict
 
-After Step 8, so it can verify what was written. Rules and formats: `VERDICT`. Chat only; write nothing.
+After Step 8, so it can verify what was written. Chat only; write nothing to `MEM`.
 
 1. **Ledger (full and lean).** Every candidate, case and Round 3/4 item: `written`, `merged`, `rejected` or `deferred` (where). Lean: candidates only.
-2. **Loose-ends sweep, carry-over list (full only).** Per `FULL`; formats in `VERDICT`.
-3. **Verify, then verdict.** Check each claim with one read-only call. **Never issue SAFE on an unverified claim.** Full: `SAFE` or `NOT SAFE — <blocker + clearing action>`. OWNER may accept a blocker; Claude never does. Lean: `SAFE TO COMPACT` or `NOT SAFE TO COMPACT` stating that the sweeps were not run; never plain `SAFE`. `${CLAUDE_PLUGIN_ROOT}/scripts/km_verdict_check.py` checks a ledger's consistency, not its truth.
-4. NOT SAFE: print "KM close-out written — thread NOT yet safe to close" instead of "complete". Only SAFE sessions are archive/delete candidates.
+2. **Full only:** loose-ends sweep and carry-over list per `FULL`; read `VERDICT` for formats and the verdict rules.
+3. **Check.** Verify each claim with one read-only call, then write the ledger as JSON in the OS temp dir: `{"mode":"lean|full|verdict-only","full_loaded_marker":"<FULL's Full-load marker; not for lean>","candidates":[{"id":1,"disposition":"written","file":"<slug>.md","where":"..","verified":true,"evidence":".."}],"commit":"<hash>|null","written_paths":[".."],"reverse_sweep":{"ran":true,"unreconciled":[]},"loose_ends":[{"item":"..","status":"clear|tracked|open","where":".."}],"carry_over":[{"item":"..","where":".."}]}`. Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_verdict_check.py" <json> --mem "<MEM>"` and report its verdict line and its `Model-verified` list. The script checks the file, commit and marker claims; the rest stay yours. Lean omits `reverse_sweep`, `loose_ends`, `carry_over`.
+4. **Verdict.** **Never issue SAFE on an unverified claim.** Full: `SAFE` or `NOT SAFE — <blocker + clearing action>`. OWNER may accept a blocker; Claude never does. Lean: `SAFE TO COMPACT` or `NOT SAFE TO COMPACT`, stating that the reverse and loose-ends sweeps were not run; never plain `SAFE`. `SAFE TO COMPACT` needs every candidate dispositioned with verified evidence and every `thread` item in the Keep line.
+5. NOT SAFE: print "KM close-out written — thread NOT yet safe to close" instead of "complete". Only full-run SAFE sessions are archive/delete candidates.
 
 ## Error handling
 

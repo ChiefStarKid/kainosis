@@ -3,6 +3,7 @@ km_close.py, the mechanical file appends of a close-out. A synthetic memory fold
 (tests/fixtures/close) is copied to a temp dir; nothing real is read or written."""
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -297,6 +298,28 @@ with tempfile.TemporaryDirectory() as t:
     env["CLAUDE_CODE_SESSION_ID"] = "from-env"
     rc, out, err = go(d, mem, {k: v for k, v in load_input().items() if k != "session"}, env=env)
     check("session from env", rc == 0 and json.loads(lines(mem / "eval" / "cases.jsonl")[0])["session"] == "from-env", err)
+
+    # the check contract: the skill text and example match what the script accepts
+    skill = (root.parent / "skills" / "km" / "SKILL.md").read_text(encoding="utf-8")
+    sys.path.insert(0, str(root.parent / "scripts"))
+    import km_close
+    check("skill names every check type", all(f"`{t}`" in skill for t in km_close.CHECK_TYPES))
+    m = re.search(r'"check":(\{.*?\})\|null', skill)
+    check("skill example has a check object", m is not None)
+    if m:
+        ex = json.loads(m.group(1).replace("<regex>", "x"))
+        case = dict(load_input()["cases"][0], check=ex)
+        d, mem = fresh(base)
+        rc, out, err = go(d, mem, load_input(cases=[case], backlog=[]))
+        check("skill example check passes", rc == 0, err)
+    d, mem = fresh(base)
+    prose = dict(load_input()["cases"][0], check="no `send` command with a new subject line")
+    rc, out, err = go(d, mem, load_input(cases=[prose], backlog=[]))
+    check("prose check rejected", rc == 2 and "'check' must be null or an object" in err, err)
+    check("prose rejected writes nothing", not (mem / "eval" / "cases.jsonl").exists())
+    bad = dict(load_input()["cases"][0], check={"type": "no_send_with_new_subject"})
+    rc, out, err = go(d, mem, load_input(cases=[bad], backlog=[]))
+    check("unknown check type rejected", rc == 2, err)
 
     # missing memory folder, missing input file
     rc, out, err = run("--mem", str(base / "absent"), "--input", str(fx / "input.json"))
