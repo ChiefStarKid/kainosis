@@ -10,13 +10,13 @@ A fork of [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf55591489
 
 **Before:** your memory says "read a sheet's header before writing to it", and every session pays for that line. **After:** `km-audit` runs the situation on the current model with and without the rule. If the model gets it right without being told, and your past sessions agree, the rule moves to `dormant/` and stops loading. "Sensor readings are tenths of a degree" is private knowledge no model can guess, so it stays.
 
-**Use this if** you use Claude Code every day, keep memory or `CLAUDE.md` files, keep correcting Claude, and those files keep growing.
+**Use this if** you use Claude Code every day, keep memory or `CLAUDE.md` files, keep correcting Claude, and those files keep growing. It is built for one knowledge worker who controls only their own local folders, not the company's repositories, and has little time to tidy even those. Knowledge shared across a team or organisation is out of scope for now.
 
 The **Solomon Framework** is the method: the thinking behind the capture, re-test and retire loop, set out in [What is different](#what-is-different) and [docs/](docs/). Its own home, written independent of any tool, is [the Solomon Framework gist](https://gist.github.com/ChiefStarKid/bb10932b9dd04752deb4db632f7c6fdc), a fork of Karpathy's. The gist treats the AI harness as an operating system with three jobs: what gets loaded, what gets written and how sessions relate. Kainosis implements the memory part. Connecting mail and other systems is not part of the plugin. It has two skills:
 - **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case (the situation, what you expected and the model that failed), checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
 - **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes (the size of what every session reads before you type).
 
-Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history. Status: plugin v0.2.2; the method is tested by one person on one profile. See [Results so far](#results-so-far).
+Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history (optional here). Status: plugin v0.3.0; the method is tested by one person on one profile. See [Results so far](#results-so-far).
 
 ### Terms
 
@@ -71,7 +71,7 @@ Built and tested on:
 - Windows 11; Windows PowerShell 5.1 and Git Bash
 - Python 3.13; pywin32 for the probe runner only
 - Claude Pro plan, no extra usage; models switched per task (Opus 5.5, Sonnet 5.5)
-- Memory kept in a git repo, so every close-out and structural fix is a revertable commit
+- Memory kept in a local git repo, so every close-out and structural fix is a revertable commit. Git is optional: a local safety net that needs no company repository, not a requirement. Without it, the commit step is skipped
 - Work systems reached through local scripts rather than MCP servers, because the corporate environment was not mine to configure
 
 | Component | Portability | Constraint behind it |
