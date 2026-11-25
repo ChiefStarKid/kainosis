@@ -1,8 +1,8 @@
-# Kainosis
+# Kainosis plugin
 
 **Claude's memory only grows. This plugin tests each rule against the current model and stops loading the ones it no longer needs, so your memory gets smaller as models get better.**
 
-The model's weights belong to the vendor. The context belongs to you. Kainosis tunes that context against measured results: it tests each rule on the current model and retires the ones it no longer needs.
+The model's weights belong to the vendor. The context belongs to you. The Kainosis plugin tunes that context against measured results: it tests each rule on the current model and retires the ones it no longer needs.
 
 Topics: `llm-wiki` · `karpathy-llm-wiki` · `claude-code` · `claude-code-plugin` · `claude-skills` · `agent-memory` · `llm-memory` · `knowledge-graph` · `knowledge-management` · `personal-knowledge-management` · `context-engineering` · `context-window` · `llm-evaluation` · `evals` · `ai-agents` · `coding-agents` · `memory-pruning` · `second-brain` · `markdown` · `hub-and-spoke`
 
@@ -12,7 +12,7 @@ A fork of [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf55591489
 
 **Use this if** you use Claude Code every day, keep memory or `CLAUDE.md` files, keep correcting Claude, and those files keep growing. It is built for one knowledge worker who controls only their own local folders, not the company's repositories, and has little time to tidy even those. Knowledge shared across a team or organisation is out of scope for now.
 
-The **Solomon Framework** is the method: the thinking behind the capture, re-test and retire loop, set out in [What is different](#what-is-different) and [docs/](docs/). Its own home, written independent of any tool, is [the Solomon Framework gist](https://gist.github.com/ChiefStarKid/bb10932b9dd04752deb4db632f7c6fdc), a fork of Karpathy's. The gist treats the AI harness as an operating system with three jobs: what gets loaded, what gets written and how sessions relate. Kainosis implements the memory part. Connecting mail and other systems is not part of the plugin. It has two skills:
+The **Solomon Framework** is the method: the thinking behind the capture, re-test and retire loop, set out in [What is different](#what-is-different) and [docs/](docs/). Its own home, written independent of any tool, is [the Solomon Framework gist](https://gist.github.com/ChiefStarKid/bb10932b9dd04752deb4db632f7c6fdc), a fork of Karpathy's. The gist treats the AI harness as an operating system with three jobs: what gets loaded, what gets written and how sessions relate. The Kainosis plugin implements the memory part. Connecting mail and other systems is not part of the plugin. It has two skills:
 - **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case (the situation, what you expected and the model that failed), checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
 - **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes (the size of what every session reads before you type).
 
