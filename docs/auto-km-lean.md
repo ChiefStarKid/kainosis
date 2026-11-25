@@ -1,6 +1,6 @@
 # Auto km lean: the gate (first slice)
 
-`scripts/km_auto_gate.py` decides, for each proposed memory edit, whether it is safe to apply without asking. Anything that fails a gate or cannot be judged is held for you. This slice is the gate and the digest only. It is **not wired into `km` yet**: you run it by hand, and it is off unless you pass `--opt-in`.
+`scripts/km_auto_gate.py` decides, for each proposed memory edit, whether it is safe to apply without asking. Anything that fails a gate or cannot be judged is held for you. You can run it by hand (it is off unless you pass `--opt-in`) or through `km lean auto`, below.
 
 ## What it does
 
@@ -29,6 +29,15 @@ Approving a held edit (`--approve <id>`) skips the gates but never the structura
 ## The digest
 
 Each run writes `digest.md` with: what was applied (one revert command each), what is held and why (with its approve command), options that were not recommended, warnings (for example a created file nothing links to yet), and a prepared `git add` and `git commit` that are printed, not run. You commit.
+
+## Wiring: `km lean auto`
+
+`km lean auto` is a lean run (see the km skill) where memory edits that pass the gate are written without a question. The word `auto` in the command is the opt-in; typing plain `km lean` never writes unasked. Steps, in the km skill's Step 4:
+
+1. Run Behaviours D, E and G on each candidate's text as usual, then write one edit per candidate that is a new file, an appended or inserted line, or a one-line fact fix, into a temp edits file (format in the script header). `source` is `owner` or `owner_paraphrase` only for candidates from OWNER's own turns; a candidate tagged `[from <source>]` is not an edit, it is asked as today. Set `recommended: true` only for candidates you would pre-flag "(Recommended)". New index lines are not edits. The retrieval query for each new file is an `append` edit to `eval/retrieval.jsonl`.
+2. `gate`, then `apply --opt-in --run-id <timestamp>`. Show OWNER the applied list with its one-line summaries and the held list with reasons.
+3. Round 1 and 2 (one call) cover only the held and not-recommended candidates, plus cases and the correction question. A yes to a held edit is applied with `apply --edits <run>/held.json --opt-in --approve <id>`. Everything else confirmed is written as in Step 8; skip what the gate already wrote.
+4. Behaviour H still runs. Step 8 commits once, covering the run folder too. The Step 9 ledger marks gate-applied edits `written` with the run's digest as where, and the verdict stays `SAFE TO COMPACT` / `NOT SAFE TO COMPACT`.
 
 ## Tests
 

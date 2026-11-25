@@ -1,7 +1,7 @@
 ---
 name: km
 description: "Session close-out for the memory graph: captures rules and facts, records corrections as eval cases, checks graph health. `lean` = cheap offload before /compact."
-argument-hint: "[lean]"
+argument-hint: "[lean | lean auto]"
 ---
 
 # km
@@ -10,6 +10,7 @@ End-of-session KM. Confirm via Q&A, then write directly. No plan gate.
 
 - `km`: full run.
 - `km lean` (alias `pre-compact`): offload before `/compact`. Durable content goes to the graph, corrections become eval cases, and the run ends with a ready-to-paste `/compact Keep:` line for the rest. Skips Round 3, Round 4, Behaviour A and the Step 6 summary.
+- `km lean auto`: a lean run where edits that pass the gate are written without a question and the rest are asked as usual. The word `auto` in the command is the opt-in, needed every run. Procedure: `AUTO_DOC`.
 
 Context efficiency first. Memory content standard: `SCHEMA`. Size budget for this file: target ≤18,000 bytes, hard ceiling 20,000 (`wc -c`).
 
@@ -19,6 +20,7 @@ Context efficiency first. Memory content standard: `SCHEMA`. Size budget for thi
 - `GRAPH` = `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_graph_check.py" --mem "${user_config.memory_path}"`. Read-only; shared with km-audit.
 - `SCHEMA` = `${CLAUDE_PLUGIN_ROOT}/docs/schema.md` (frontmatter A1, description A3, body A4, graph metrics A5, sources A6).
 - `VERDICT` = `${CLAUDE_PLUGIN_ROOT}/docs/closeout-verdict.md` (ledger, verdict rules, example). Read before Step 9.
+- `AUTO_DOC` = `${CLAUDE_PLUGIN_ROOT}/docs/auto-km-lean.md` (§Wiring); the gate is `python "${CLAUDE_PLUGIN_ROOT}/scripts/km_auto_gate.py"`.
 - `SCOPE` = `${user_config.scope_rule_file}` (may be empty: then everything in `MEM` is in scope).
 - `MEM/eval/` holds `cases.jsonl` and `retrieval.jsonl`. Never index it in MEMORY.md; never `[[ ]]`-link it.
 
@@ -81,6 +83,7 @@ Re-read the conversation last turn to first for anything that matters and is not
 - **Round 4 — Discard (full only).** "Which of these memory files should be deleted or retired?" One option per candidate with a one-line reason. Plus "Keep everything".
 
 **Lean:** ask Rounds 1 and 2 together, in a single `AskUserQuestion` call.
+**Lean auto:** before the Round, read `AUTO_DOC` §Wiring and gate the edits; Rounds 1 and 2 then cover only what is held, plus cases.
 
 ## Step 5 — Behaviours
 
