@@ -2,6 +2,8 @@
 
 **Claude's memory only grows. This plugin tests each rule against the current model and stops loading the ones it no longer needs, so your memory gets smaller as models get better.**
 
+The model's weights belong to the vendor. The context belongs to you. Kainosis tunes that context against measured results: it tests each rule on the current model and retires the ones it no longer needs.
+
 Topics: `llm-wiki` · `karpathy-llm-wiki` · `claude-code` · `claude-code-plugin` · `claude-skills` · `agent-memory` · `llm-memory` · `knowledge-graph` · `knowledge-management` · `personal-knowledge-management` · `context-engineering` · `context-window` · `llm-evaluation` · `evals` · `ai-agents` · `coding-agents` · `memory-pruning` · `second-brain` · `markdown` · `hub-and-spoke`
 
 A fork of [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) that turns it on the agent itself: corrections become tested rules, and rules the model outgrows are retired, within a fixed context budget.
@@ -18,6 +20,7 @@ Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kep
 
 ### Terms
 
+- **Memory Graph:** what Claude reads from memory (`MEMORY.md`, its hubs and pages, and the links between them), plus the settings you control.
 - **Basis tag:** each rule is tagged `fact` or `preference` (permanent), or `compensation` (guards a model weakness, so it can retire).
 - **Probe:** a clean-room test of a rule, run with and without its text on the current model, with no memory or tools loaded.
 - **Retire:** move a rule to `dormant/`, where it no longer loads and can be moved back.
@@ -137,7 +140,7 @@ No telemetry, no other services, no MCP servers, and the plugin registers no hoo
 
 ### Try it on the example
 
-`examples/graph/` is a small fictional memory graph (a hobby greenhouse) with hubs, spokes, one feedback rule of each basis and sample eval files:
+`examples/graph/` is a small fictional Memory Graph (a hobby greenhouse) with hubs, spokes, one feedback rule of each basis and sample eval files:
 
 ```bash
 python scripts/km_graph_check.py --mem examples/graph
@@ -162,6 +165,7 @@ In short: the always-loaded index shrank by almost 40% while staying correct, an
 
 The roadmap lives in [GitHub issues labelled `roadmap`](https://github.com/ChiefStarKid/kainosis/issues?q=is%3Aissue+is%3Aopen+label%3Aroadmap); [milestone v0.2](https://github.com/ChiefStarKid/kainosis/milestone/1) holds what has shipped. Headlines:
 - **Shipped in v0.2:** capture from the owner's words only ([#10](https://github.com/ChiefStarKid/kainosis/issues/10)), a load receipt ([#8](https://github.com/ChiefStarKid/kainosis/issues/8)), a `supersedes:` field ([#12](https://github.com/ChiefStarKid/kainosis/issues/12)) and an example rules-reminder hook ([#5](https://github.com/ChiefStarKid/kainosis/issues/5)); in v0.2.1, an example PreCompact hook for `km lean` ([#6](https://github.com/ChiefStarKid/kainosis/issues/6)). See the [CHANGELOG](CHANGELOG.md).
+- **Next:** the **Performance Layer**, a planned tuning process, not built yet. Here "performance" means how well the agent does the work, not speed. It would watch sessions, run checks and replay tests, and propose where each rule loads and which rules retire on each model. Unlike fine-tuning, every change is visible and reversible in git. It can only steer what the model already does; it can't add a capability the model lacks.
 - **Later:** `bare_probe.py` beyond Windows, published error rates for each check, harder hooks and opt-in session grooming.
 
 Items marked `data-handling` change what the plugin reads, writes or sends; they ship with a CHANGELOG "Data handling" note and a PRIVACY.md update. Several items came from comparing notes with [Link](https://github.com/gowtham0992/link), another implementation of the LLM Wiki pattern.
@@ -175,7 +179,7 @@ skills/km-audit/  SKILL.md
 scripts/          km_graph_check.py · bare_probe.py · bare_probe_token_setup.py
 docs/             schema.md · evals.md · scope-rule.md · evolution.md · second-cluster.md
 hooks/            example hooks, not registered: rules_reminder.py · precompact_keep.py
-examples/graph/   fictional memory graph
+examples/graph/   fictional Memory Graph
 PRIVACY.md · SECURITY.md · CHANGELOG.md · LICENSE · CITATION.cff
 ```
 
