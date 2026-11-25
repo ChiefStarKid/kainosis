@@ -12,7 +12,7 @@ End-of-session KM. Confirm via Q&A, then write directly. No plan gate.
 - `km lean` (alias `pre-compact`): offload before `/compact`. Durable content goes to the graph, corrections become eval cases, and the run ends with a ready-to-paste `/compact Keep:` line for the rest. Skips Round 3, Round 4, Behaviour A and the Step 6 summary.
 - `km lean auto`: a lean run where edits that pass the gate are written without a question and the rest are asked as usual. The word `auto` in the command is the opt-in, needed every run. Procedure: `AUTO_DOC`.
 
-Context efficiency first. Memory content standard: `SCHEMA`. Size budget for this file: target ≤18,000 bytes, hard ceiling 20,000 (`wc -c`).
+Context efficiency first. Memory content standard: `SCHEMA`. Size budget for this file: target ≤18,000 bytes, hard ceiling 20,000 (`wc -c`, CI). Why: the body loads on every run, and `lean` runs just before `/compact`.
 
 **Names used below**
 - `OWNER` = ${user_config.owner_name}, the person whose memory this is.
@@ -186,23 +186,21 @@ No approval gate: execute the Q&A-confirmed operations. Pause only before a DELE
     **Lean:** add `Carry list:` (one short bullet per `thread` item). Make the **last line** of the message ready to paste:
     `/compact Keep: <item>; <item>; ...`
     Keep it short: names and decisions. With no `thread` items, the last line is `/compact`.
-    OWNER always types or pastes `/compact` (a skill or hook cannot run it). Only when OWNER has said in this conversation that they run the opt-in PreCompact hook (`hooks/README.md`; you cannot detect it, so never assume it): also write the Keep text (the part after `/compact `, i.e. `Keep: ...`) to `<temp dir>/claude/km-keep.txt` (`%TEMP%` on Windows, `$TMPDIR` or `/tmp` elsewhere), overwriting any old file. Then add before the last line: "Or type a bare `/compact`: the hook feeds the Keep list in." Without OWNER's statement, write no file (a stray file would feed a later auto-compaction), and never skip the paste-ready last line.
+    OWNER always types or pastes `/compact` (a skill or hook cannot run it). Write the PreCompact Keep file only if OWNER said in this conversation that they run the hook (never assume); procedure in `hooks/README.md`. Never skip the paste-ready last line.
 
 ## Step 9 — Close-out verdict
 
-Runs after Step 8 so it can verify what was written. Rules and formats: `VERDICT`. Chat only; write nothing.
+After Step 8, so it can verify what was written. Rules and formats: `VERDICT`. Chat only; write nothing.
 
-1. **Disposition ledger (full and lean).** Every candidate, case and Round 3/4 item: `written`, `merged`, `rejected` or `deferred` (with where). Lean: candidates only.
-2. **Loose-ends sweep (full only).** Unsent drafts, files outside `MEM`, uncommitted or unpushed work, running tasks, a failed commit or push: `clear`, `tracked` (where) or `open`.
-3. **Carry-over list (full only).** What lives only in this thread: `what — where it lives now`. No home outside it = `unanchored`.
-4. **Verify, then verdict.** Check each claim with one read-only call (file exists, ref pushed). **Never issue SAFE on an unverified claim.** Full: `SAFE` only if the ledger is complete, every sweep find is reconciled, no loose end is open, nothing is unanchored and no claim is unverified; else `NOT SAFE — <blocker + action that clears it>`. OWNER may accept a blocker; Claude never does. Lean: `SAFE TO COMPACT` or `NOT SAFE TO COMPACT`, stating that the sweeps were not run; never `SAFE` (sweeps skipped, Keep line is thread-only).
-5. Only SAFE sessions are archive/delete candidates (session grooming). On NOT SAFE print "KM close-out written — thread NOT yet safe to close" instead of the "complete" line.
+1. **Ledger (full and lean).** Every candidate, case and Round 3/4 item: `written`, `merged`, `rejected` or `deferred` (where). Lean: candidates only.
+2. **Loose-ends sweep, carry-over list (full only).** Formats in `VERDICT`.
+3. **Verify, then verdict.** Check each claim with one read-only call. **Never issue SAFE on an unverified claim.** Full: `SAFE` or `NOT SAFE — <blocker + clearing action>`. OWNER may accept a blocker; Claude never does. Lean: `SAFE TO COMPACT` or `NOT SAFE TO COMPACT` (sweeps not run); never plain `SAFE`. `scripts/km_verdict_check.py` checks a ledger's consistency, not its truth.
+4. NOT SAFE: print "KM close-out written — thread NOT yet safe to close" instead of "complete". Only SAFE sessions are archive/delete candidates.
 
 ## Error handling
 
 | Case | Handling |
 |---|---|
-| MEMORY.md missing | Create it with the standard header; index the files written |
 | No memory files | CREATE-only; skip A, B, D |
 | Nothing KM-worthy | Zero-candidate checkpoint (Step 3b); else all operations "None", cases still recorded, a full run still reports C and F |
 | DELETE with weak evidence | Downgrade to an UPDATE with a staleness note; never DELETE on weak evidence |
@@ -212,17 +210,11 @@ Runs after Step 8 so it can verify what was written. Rules and formats: `VERDICT
 
 ## Key rules
 
-- Q&A (Step 4) is the confirmation step; there is no plan gate.
-- UPDATE before CREATE. Confirmations count like corrections.
+- Confirmations count like corrections.
 - MEMORY.md is the index; the files are authoritative. Additions to MEMORY.md or CLAUDE.md need OWNER's yes.
-- Write for a cold Claude: `SCHEMA` A3/A4.
-- Verify before writing (Behaviour G).
-- Sources by reference (`SCHEMA` A6): record where a source lives and what it holds; never copy or reorganise it.
-- Never read every memory file or index `eval/`.
+- Never index `eval/`.
 
 ## Scope and structure rules
 
-- **Scope rule.** If `SCOPE` is set, decide first which scope this session's work belongs to, then apply the file's rules: which memory is in scope for candidates, which files never get discard proposals, how out-of-scope facts are abstracted, and where work for another profile is handed off. With no `SCOPE`, all of `MEM` is in scope. Format: `${CLAUDE_PLUGIN_ROOT}/docs/scope-rule.md`.
-- **Hub-and-spoke for Claude wikis.** Any wiki, briefing or context-retention file meant for Claude (not human reading) is `index.md` (10-15 lines: topic, filename, load trigger) plus one self-contained node per concept (<50 lines, wikilinks). Never one monolithic file. A project hub is the coordinator: decisions table, status, open questions, file map, corrections log; one spoke per workstream. Restructuring: build the new set in a subfolder; OWNER retires the old.
-- **One memory file per component.** Separate scripts, tools or integrations get separate files unless they share code, DOM or API surface. 
-- **No child CLAUDE.md.** A CLAUDE.md in a subdirectory only loads when Claude Code is rooted there. Consolidate it into a memory file, update the index, then delete it (ask first).
+- **Scope rule.** With `SCOPE` set, first decide which scope this session's work belongs to, then apply it (`docs/scope-rule.md`); with none, all of `MEM` is in scope.
+- Creating a wiki/briefing file for Claude, a file per script/tool, or touching a subdirectory CLAUDE.md → read `docs/structure-rules.md` first.

@@ -37,7 +37,7 @@ jobs:
           fail=0
           for f in skills/*/SKILL.md; do
             n=$(wc -c < "$f"); echo "$f: $n bytes"
-            [ "$n" -le 20000 ] || { echo "over the 20,000-byte ceiling"; fail=1; }
+            [ "$n" -le 20000 ] || { echo "over the 20,000-byte ceiling (target 18,000; the skill loads on every run and lean runs right before /compact: move text to docs/, see the SKILL.md header)"; fail=1; }
           done
           exit $fail
       - name: Graph check on the example graph
