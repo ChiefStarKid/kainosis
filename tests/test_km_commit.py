@@ -11,7 +11,12 @@ from pathlib import Path
 script = str(Path(__file__).resolve().parent.parent / "scripts" / "km_commit.py")
 
 
+IDENT = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
+         "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid"}  # CI runners have no git identity
+
+
 def run(*a, env=None):
+    env = {**os.environ, **IDENT, **(env or {})}
     p = subprocess.run([sys.executable, "-X", "utf8", "-I", script, *a], capture_output=True, text=True, encoding="utf-8", env=env)
     return p.returncode, p.stdout, p.stderr
 
