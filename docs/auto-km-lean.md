@@ -22,9 +22,16 @@ Edits are checked one after another against a temporary copy of the memory folde
 | Never automatic | Rule files that touch sending, deleting or publishing. Added text that weakens a rule ("no longer", "skip", "unless", ...). A source other than your own words (for example text from a tool result). Edits over 1,500 characters. |
 | Recommended | An edit not marked recommended is held and listed in the digest as an option. |
 
-A `fix_fact` also needs a read-only check (a path that exists, or a file that contains the value), and the checked value must appear in the new text.
+A `fix_fact` also needs a read-only check (a path that exists, or a file that contains the value). The checked value must be at least 4 characters, appear in the new text and not in the old text. A `fix_fact` never edits a rule file.
 
 Approving a held edit (`--approve <id>`) skips the gates but never the structural checks: the path stays inside the memory folder, an anchor or old text is found exactly once, a file to edit exists and a file to create does not. Approved edits are marked as such in the digest.
+
+## Limits
+
+- `source: owner` is a label the proposer sets; the gate cannot verify it. The owner-words-only rule rests on whatever builds the edit list.
+- The sending and weakening checks are word lists. A softened rule that avoids those words passes them, so they reduce risk and are not airtight. The reachability and frontmatter gates do not depend on them.
+- `apply` refuses, and writes nothing, if a file it would change was edited after the run started. The revert record is written before any memory file changes.
+- Created files are written with LF line endings, even in a CRLF folder.
 
 ## The digest
 

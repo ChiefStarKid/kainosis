@@ -73,6 +73,8 @@ with tempfile.TemporaryDirectory() as td:
     assert rc == 0, (rc, err)
     rep = json.loads(out)
     assert rep["applied"] == ["e1", "e2", "e3", "e4", "e17"], rep
+    # the digest prints the script's absolute path, so each command works from any folder
+    assert str(Path(script)) in (mem / "eval" / "auto_runs" / "t1" / "digest.md").read_text(encoding="utf-8")
     assert (mem / "reference_new.md").exists() and not (mem / "reference_dead.md").exists()
     assert (mem / "MEMORY.md").read_bytes() == original["MEMORY.md"], "MEMORY.md is never touched"
     for name in ("feedback_send_reports.md", "reference_tools.md", "project_shop.md"):
@@ -85,12 +87,12 @@ with tempfile.TemporaryDirectory() as td:
     runs = mem / "eval" / "auto_runs" / "t1"
     digest = (runs / "digest.md").read_text(encoding="utf-8")
     for needle in ("## Applied", "## Held for review", "## Not recommended", "## Warnings", "## Prepared commit",
-                   "revert --mem", "--edit e2", "--approve e9", "km auto lean t1: 5 applied, 13 held",
+                   "revert --mem", "--edit e2", "--approve e9", "km auto lean t1: 5 applied, 15 held",
                    "reference_new.md was created but nothing links to it yet", "git -C"):
         assert needle in digest, f"digest lacks {needle!r}"
     held = json.loads((runs / "held.json").read_text(encoding="utf-8"))
-    assert [h["id"] for h in held][:3] == ["e5", "e6", "e7"] and len(held) == 13
-    print("APPLY --opt-in: 5 applied, 13 held, digest with revert and approve commands, CRLF kept")
+    assert [h["id"] for h in held][:3] == ["e5", "e6", "e7"] and len(held) == 15
+    print("APPLY --opt-in: 5 applied, 15 held, digest with revert and approve commands, CRLF kept")
 
     # 4. revert refuses when the file changed, then restores bytes exactly
     new = mem / "reference_new.md"
@@ -133,4 +135,17 @@ with tempfile.TemporaryDirectory() as td:
         assert d["decision"] == "HOLD" and d["category"] == "gate_failed" \
             and any("cannot be checked" in r for r in d["reasons"]), d
     print("ZERO QUERIES: insert_line and fix_fact held")
+
+    # 7. apply refuses when a file changed after the run started (checked directly on the helper)
+    sys.path.insert(0, str(root.parent / "scripts"))
+    import km_auto_gate as g
+    mem3 = td / "mem3"
+    shutil.copytree(fx / "mem", mem3)
+    tmp3, _, _, applied3, base3 = g.run_gate(mem3, [dict(e, **{}) for e in edits if e["id"] == "e2"], set())
+    files3 = sorted({x["file"] for x in applied3})
+    assert files3 == ["feedback_units.md"] and g.changed_since(mem3, base3, files3) == []
+    (mem3 / "feedback_units.md").write_bytes((mem3 / "feedback_units.md").read_bytes() + b"x\n")
+    assert g.changed_since(mem3, base3, files3) == ["feedback_units.md"]
+    tmp3.cleanup()
+    print("CONCURRENT EDIT: a file changed after the run started is detected")
 print("ok")

@@ -252,6 +252,8 @@ def policy(cand, e, plan):
         m = WEAKENING.search(shown)
         if m:
             reasons.append(f"added text may weaken a rule ({m.group(0)!r})")
+        if rule and kind == "fix_fact":
+            reasons.append("fix_fact never edits a rule file (it could reword the rule)")
     if reasons:
         raise Hold("never_automatic", *reasons)
     if e.get("recommended") is not True:
@@ -285,8 +287,11 @@ def policy(cand, e, plan):
             raise Hold("gate_failed", "fix_fact needs a read-only verify with a value")
         if "\n" in e["old"] or "\n" in e["new"]:
             raise Hold("gate_failed", "fix_fact is one line only")
-        if str(v["value"]) not in e["new"]:
-            raise Hold("gate_failed", "the verified value does not appear in the new text")
+        val = str(v["value"])
+        if len(val) < 4:
+            raise Hold("gate_failed", "the verified value is too short to tie the check to the fact")
+        if val not in e["new"] or val in e["old"]:
+            raise Hold("gate_failed", "the verified value must appear in the new text and not in the old text")
         if v.get("type") == "path_exists":
             if not Path(str(v["value"])).expanduser().exists():
                 raise Hold("gate_failed", f"path does not exist: {v['value']}")
@@ -354,6 +359,7 @@ def run_gate(mem, edits, approve):
     tmp = tempfile.TemporaryDirectory()
     cand = Path(tmp.name) / "mem"
     shutil.copytree(mem, cand, ignore=shutil.ignore_patterns(".git", "auto_runs"))
+    base = {str(p.relative_to(cand)).replace("\\", "/"): p.read_bytes() for p in cand.rglob("*") if p.is_file()}
     st, seen, decisions, applied = state_of(cand), set(), [], []
     for i, e in enumerate(edits):
         eid = str(e.get("id", "")) if isinstance(e, dict) else ""
@@ -388,7 +394,18 @@ def run_gate(mem, edits, approve):
                 _restore(plan["path"], snap)
             d.update(decision="HOLD", category=h.category, reasons=h.reasons)
         decisions.append(d)
-    return tmp, cand, decisions, applied
+    return tmp, cand, decisions, applied, base
+
+
+def changed_since(mem, base, files):
+    """Files whose bytes in the real folder differ from the copy the run started from."""
+    out = []
+    for f in files:
+        p = mem / f
+        now = p.read_bytes() if p.exists() else None
+        if now != base.get(f):
+            out.append(f)
+    return out
 
 
 def _restore(path, snap):
@@ -408,7 +425,7 @@ def summarize(e, plan):
 
 def cmd_gate(a):
     mem = Path(a.mem)
-    tmp, _, decisions, applied = run_gate(mem, load_edits(a.edits), set(a.approve))
+    tmp, _, decisions, applied, _ = run_gate(mem, load_edits(a.edits), set(a.approve))
     try:
         print(json.dumps({"mem": str(mem), "apply": len(applied), "hold": len(decisions) - len(applied),
                           "decisions": decisions}, indent=2))
@@ -425,14 +442,12 @@ def cmd_apply(a):
     rundir = mem / "eval" / "auto_runs" / run
     if rundir.exists():
         die(f"refused: run {run} already exists")
-    tmp, cand, decisions, applied = run_gate(mem, edits, set(a.approve))
+    tmp, cand, decisions, applied, base = run_gate(mem, edits, set(a.approve))
     try:
         touched = sorted({x["file"] for x in applied})
-        for f in touched:
-            src = cand / f
-            dst = mem / f
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            dst.write_bytes(src.read_bytes())
+        changed = changed_since(mem, base, touched)
+        if changed:
+            die(f"refused: changed since the run started, nothing written: {changed}")
         warnings = []
         links_all = {p.stem: link_targets(p.read_text(encoding="utf-8", errors="replace"))
                      for p in mem.glob("*.md") if p.name != "log.md"}
@@ -451,6 +466,10 @@ def cmd_apply(a):
         files = touched + [f"eval/auto_runs/{run}/{n}" for n in ("manifest.json", "digest.md", "held.json")]
         (rundir / "digest.md").write_text(digest(mem, run, applied, decisions, held, warnings, files),
                                           encoding="utf-8")
+        for f in touched:  # the revert record is on disk before any memory file changes
+            dst = mem / f
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_bytes((cand / f).read_bytes())
         print(json.dumps({"run": run, "applied": [x["id"] for x in applied],
                           "held": [d["id"] for d in decisions if d["decision"] == "HOLD"],
                           "digest": str(rundir / "digest.md")}, indent=2))
@@ -459,7 +478,7 @@ def cmd_apply(a):
 
 
 def digest(mem, run, applied, decisions, held, warnings, files):
-    me = f'python scripts/km_auto_gate.py'
+    me = f'python "{Path(__file__).resolve()}"'
     held_d = [d for d in decisions if d["decision"] == "HOLD"]
     out = [f"# Auto km lean run {run}", "",
            f"{len(applied)} applied, {len(held_d)} held. Nothing was committed or pushed.", "", "## Applied", ""]

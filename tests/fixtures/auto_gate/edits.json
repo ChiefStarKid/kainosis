@@ -181,5 +181,33 @@
   "source": "owner",
   "expect": "HOLD:gate_failed",
   "text": "{\"query\": \"nothing here\", \"expected\": \"reference_nope\"}"
+ },
+ {
+  "id": "e19",
+  "kind": "fix_fact",
+  "file": "feedback_units.md",
+  "recommended": true,
+  "source": "owner",
+  "expect": "HOLD:never_automatic",
+  "old": "**Trigger:** any reading with a unit.",
+  "new": "**Trigger:** a reading with a unit, rarely (see {ROOT}/logs).",
+  "verify": {
+   "type": "path_exists",
+   "value": "{ROOT}/logs"
+  }
+ },
+ {
+  "id": "e20",
+  "kind": "fix_fact",
+  "file": "reference_paths.md",
+  "recommended": true,
+  "source": "owner",
+  "expect": "HOLD:gate_failed",
+  "old": "Cache lives in /old/cache.",
+  "new": "Cache lives in /old/cache2.",
+  "verify": {
+   "type": "path_exists",
+   "value": "/"
+  }
  }
 ]
