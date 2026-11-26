@@ -112,6 +112,19 @@ Options (stored per profile, so two profiles can point at two memory dirs):
 
 The version is pinned in `plugin.json`, so a new commit reaches installed copies only when the version is bumped.
 
+### Updating
+
+Updates are pulled by you, never pushed to you. Auto-update is off by default for third-party marketplaces like this one, so you get a new Kainosis plugin release only if you update by hand or turn auto-update on in `/plugin` → Marketplaces.
+
+To update by hand, either use `/plugin` (Installed → Update now, or Marketplaces → Update marketplace) or run:
+
+```bash
+claude plugin marketplace update kainosis
+claude plugin update kainosis@kainosis
+```
+
+Then start a new session. `/reload-plugins` picks up most changes in an open session, but a new session is the sure way. New releases are listed in the [CHANGELOG](CHANGELOG.md).
+
 ### Example prompts
 
 1. At the end of a session in which you corrected Claude: `/kainosis:km`. It asks what to keep, records each correction as an eval case, and commits the memory changes.
