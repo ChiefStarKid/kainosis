@@ -81,7 +81,7 @@ Review the entire conversation.
 - **Round 1 — Reuse.** "What from this session is worth keeping as a reusable rule or memory?" Plus "None of these".
 - **Round 2 — Correction.** What Claude got wrong, and any existing memory that caused it. "What needs correcting — Claude's behaviour this session, or an existing memory rule that led there?" Plus "Nothing to correct". Confirming an option tagged `→ case:` records that case.
 
-**Nothing to capture** (no candidate and no case; full: after 3b): skip Rounds 1 and 2, no filler options. Lean: go to the Keep line and Step 9. Full: the checkpoint in `FULL`.
+**Nothing to capture** (no candidate and no case; full: after 3b): skip Rounds 1 and 2, no filler options. Lean: still run Step 8 steps 6-9 with zero counts, so the log line is written and committed (`COMMIT -- log.md`), then the Keep line and Step 9. Full: the checkpoint in `FULL`.
 
 **Lean:** ask Rounds 1 and 2 together, in a single `AskUserQuestion` call.
 **Lean auto:** before the Round, read `AUTO_DOC` §Wiring and gate the edits; Rounds 1 and 2 then cover only what is held, plus cases.
