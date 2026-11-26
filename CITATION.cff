@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this framework, please cite it as below."
 title: "Kainosis: a Claude Code plugin implementing the Solomon Framework"
 type: software
-version: 0.1.0
-date-released: 2026-11-21
+version: 0.4.0
+date-released: 2026-11-25
 license: MIT
 abstract: "Kainosis: a Claude Code plugin implementing the Solomon Framework, a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired."
 authors:
