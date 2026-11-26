@@ -112,15 +112,14 @@ Options (stored per profile, so two profiles can point at two memory dirs):
 
 ### Updating
 
-Nothing is pushed to your client: you pull updates. You get a new Kainosis plugin version only when a release changes `version` in `plugin.json`; commits to `main` between releases don't reach you. Auto-update is off by default for third-party marketplaces like this one, so update by hand or turn it on in `/plugin` → Marketplaces → select the marketplace → auto-update.
+Nothing is pushed to your client: you pull updates. The marketplace points at the latest release, so a new install and an update both get the released Kainosis plugin, never work in progress on `main`, and you get a new version only when a release changes `version` in `plugin.json`. Auto-update is off by default for third-party marketplaces like this one, so update by hand or turn it on in `/plugin` → Marketplaces → select the marketplace → auto-update.
 
-To update by hand, in this order:
+To update by hand:
 
-1. Refresh the marketplace listing: `/plugin` → Marketplaces → Update marketplace, or `claude plugin marketplace update kainosis`.
-2. Update the plugin: `/plugin` → Installed → Update now, or `claude plugin update kainosis@kainosis`.
-3. Run `/reload-plugins`, or start a new session.
+1. In a terminal, run `claude plugin update kainosis@kainosis`; it refreshes the marketplace listing first. In the app, refresh the listing yourself, then update: `/plugin` → Marketplaces → Update marketplace, then Installed → Update now.
+2. Run `/reload-plugins`, or start a new session.
 
-If the Update button is greyed out although a newer release exists, the listing is probably out of date: do step 1 first. The app lists the plugin as "Kainosis".
+If the Update button in the app is greyed out although a newer release exists, the listing is probably out of date: refresh the marketplace first. The app lists the plugin as "Kainosis".
 
 `/reload-plugins` picks up most changes in an open session, but a new session is the sure way. New releases are listed in the [CHANGELOG](CHANGELOG.md).
 

@@ -7,7 +7,12 @@
   "plugins": [
     {
       "name": "kainosis",
-      "source": "./",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/ChiefStarKid/kainosis.git",
+        "ref": "v0.4.0",
+        "sha": "4c5380fca48910beae47bc43ba3f8dd6226a113b"
+      },
       "description": "Implements the Solomon Framework, a Karpathy LLM Wiki fork for agents on a context budget. Corrections become tested rules; rules the model outgrows are retired."
     }
   ]
