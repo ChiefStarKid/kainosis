@@ -16,7 +16,7 @@ The **Solomon Framework** is the method: the thinking behind the capture, re-tes
 - **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case (the situation, what you expected and the model that failed), checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
 - **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes (the size of what every session reads before you type).
 
-Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history (optional here). Status: plugin v0.4.0; the method is tested by one person on one profile. See [Results so far](#results-so-far).
+Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history (optional here). Status: see the [latest release](https://github.com/ChiefStarKid/kainosis/releases/latest); the method is tested by one person on one profile. See [Results so far](#results-so-far).
 
 ### Terms
 
@@ -110,11 +110,9 @@ Options (stored per profile, so two profiles can point at two memory dirs):
 | `owner_name` | string | How the skills refer to you |
 | `scope_rule_file` | file, optional | Which memory is in scope for this profile ([format](docs/scope-rule.md)) |
 
-The version is pinned in `plugin.json`, so a new commit reaches installed copies only when the version is bumped.
-
 ### Updating
 
-Updates are pulled by you, never pushed to you. Auto-update is off by default for third-party marketplaces like this one, so you get a new Kainosis plugin release only if you update by hand or turn auto-update on in `/plugin` → Marketplaces.
+Nothing is pushed to your client: you pull updates. You get a new Kainosis plugin version only when a release changes `version` in `plugin.json`; commits to `main` between releases don't reach you. Auto-update is off by default for third-party marketplaces like this one, so update by hand or turn it on in `/plugin` → Marketplaces → select the marketplace → auto-update.
 
 To update by hand, in this order:
 
