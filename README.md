@@ -60,7 +60,7 @@ Example: "sensor readings are tenths of a degree" is a `fact`; no model can gues
 | Sources | wiki pages the LLM writes | raw sources copied and archived | pointers; sources stay where they are |
 | Retrieval | index file | SQLite + embeddings graph, recall injected on every message | hub-and-spoke index, files loaded on demand |
 | Scarce resource | — | storage and data control (fixed-cost hardware) | tokens |
-| Pruning, evals | lint | not described | cases, per-model re-tests, retirement |
+| Upkeep | lint | an archive of copied sources on owned storage | cases, per-model re-tests, retirement |
 
 [Vivian Balakrishnan's NanoClaw gist](https://gist.github.com/VivianBalakrishnan/a7d4eec3833baee4971a0ee54b08f322) (2026-04-24) also forks Karpathy, in the opposite direction, running on a Raspberry Pi. It fits owned infrastructure: sovereign storage at a fixed cost, data kept off public cloud, and a local model could take inference off the meter too. This fork fits a rented model in an environment you don't control, where tokens are the scarce resource and sources live elsewhere. Same cost and control question, opposite starting points. Neither is better; pick the one that matches your constraints.
 
