@@ -116,14 +116,15 @@ The version is pinned in `plugin.json`, so a new commit reaches installed copies
 
 Updates are pulled by you, never pushed to you. Auto-update is off by default for third-party marketplaces like this one, so you get a new Kainosis plugin release only if you update by hand or turn auto-update on in `/plugin` → Marketplaces.
 
-To update by hand, either use `/plugin` (Installed → Update now, or Marketplaces → Update marketplace) or run:
+To update by hand, in this order:
 
-```bash
-claude plugin marketplace update kainosis
-claude plugin update kainosis@kainosis
-```
+1. Refresh the marketplace listing: `/plugin` → Marketplaces → Update marketplace, or `claude plugin marketplace update kainosis`.
+2. Update the plugin: `/plugin` → Installed → Update now, or `claude plugin update kainosis@kainosis`.
+3. Run `/reload-plugins`, or start a new session.
 
-Then start a new session. `/reload-plugins` picks up most changes in an open session, but a new session is the sure way. New releases are listed in the [CHANGELOG](CHANGELOG.md).
+If the Update button is greyed out although a newer release exists, the listing is probably out of date: do step 1 first. The app lists the plugin as "Kainosis".
+
+`/reload-plugins` picks up most changes in an open session, but a new session is the sure way. New releases are listed in the [CHANGELOG](CHANGELOG.md).
 
 ### Example prompts
 
