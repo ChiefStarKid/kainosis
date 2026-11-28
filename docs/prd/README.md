@@ -16,7 +16,7 @@ One PRD per roadmap issue. The issue is the system of record; these say what and
 | [#10](https://github.com/ChiefStarKid/kainosis/issues/10) | [Capture cases and rules from the owner's words only](10-owner-words-only.md) | v0.2 |
 | [#11](https://github.com/ChiefStarKid/kainosis/issues/11) | [Harder hooks and checks: match commands as the shell runs them](11-harder-hooks-and-checks.md) | Later |
 | [#12](https://github.com/ChiefStarKid/kainosis/issues/12) | [Supersession at write time: a supersedes: field](12-supersedes-field.md) | v0.2 |
-| [#13](https://github.com/ChiefStarKid/kainosis/issues/13) | [Root-led close-out for multi-session work](13-root-led-closeout.md) | Later |
+| [#13](https://github.com/ChiefStarKid/kainosis/issues/13) | [Close-out across parent and child sessions: each thread closes itself, the parent routes the questions](13-root-led-closeout.md) | Later |
 | [#17](https://github.com/ChiefStarKid/kainosis/issues/17) | [Source and added tags per memory node](17-source-and-added-tags.md) | Later |
 | [#18](https://github.com/ChiefStarKid/kainosis/issues/18) | [Last-used report per memory file and skill (report only)](18-last-used-report.md) | Later |
 | [#23](https://github.com/ChiefStarKid/kainosis/issues/23) | [Auto km lean: safe unattended mode gated by objective checks](23-auto-km-lean.md) | In progress |
