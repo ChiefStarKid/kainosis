@@ -26,4 +26,5 @@ One PRD per roadmap issue. The issue is the system of record; these say what and
 | [#28](https://github.com/ChiefStarKid/kainosis/issues/28) | [Draft-to-sent as a correction source and outcome measure](28-draft-to-sent.md) | Later |
 | [#29](https://github.com/ChiefStarKid/kainosis/issues/29) | [Graph granularity: research, then typed links and validity fields](29-graph-granularity.md) | Later |
 | [#34](https://github.com/ChiefStarKid/kainosis/issues/34) | [Parent-triggered km verdict and lean, with a readable result](34-parent-triggered-km.md) | Next |
+| [#39](https://github.com/ChiefStarKid/kainosis/issues/39) | [km lean auto: the gate must run, and the run must prove it](39-lean-auto-gate-must-run.md) | Next |
 | [#37](https://github.com/ChiefStarKid/kainosis/issues/37) | [km skill: script the deterministic checks, fix lean load and the case check contract](37-km-skill-scripting.md) | Next |
