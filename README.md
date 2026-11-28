@@ -16,7 +16,7 @@ The **Solomon Framework** is the method: the thinking behind the capture, re-tes
 - **`/kainosis:km`** closes a session: it captures what is worth keeping, records each correction as an eval case (the situation, what you expected and the model that failed), checks graph health, and writes after a short Q&A. `/kainosis:km lean` is the cheap version to run before `/compact`.
 - **`/kainosis:km-audit`** tests the rules against the current model and retires the ones it no longer needs, reporting pass rate next to always-loaded bytes (the size of what every session reads before you type).
 
-Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history (optional here). Status: see the [latest release](https://github.com/ChiefStarKid/kainosis/releases/latest); the method is tested by one person on one profile. See [Results so far](#results-so-far).
+Credit: the pattern comes from Andrej Karpathy's LLM Wiki gist (2026-04-04). Kept from it: the LLM writes and maintains, the human directs; an index plus an append-only log; lint; git history (here a local repo, required). Status: see the [latest release](https://github.com/ChiefStarKid/kainosis/releases/latest); the method is tested by one person on one profile. See [Results so far](#results-so-far).
 
 ### Terms
 
@@ -71,7 +71,7 @@ Built and tested on:
 - Windows 11; Windows PowerShell 5.1 and Git Bash
 - Python 3.13; pywin32 for the probe runner only
 - Claude Pro plan, no extra usage; models switched per task (Opus 5.5, Sonnet 5.5)
-- Memory kept in a local git repo, so every close-out and structural fix is a revertable commit. Git is optional: a local safety net that needs no company repository, not a requirement. Without it, the commit step is skipped
+- Memory kept in a local git repo, so every close-out and structural fix is a revertable commit. A local git repo in the memory folder is required: no remote, hosting or push is needed, and sources stay where they are, by pointer. Parallel sessions share the memory folder, and commits keep their changes revertable. Today the plugin skips the commit step if the folder is not a git repo
 - Work systems reached through local scripts rather than MCP servers, because the corporate environment was not mine to configure
 
 | Component | Portability | Constraint behind it |
